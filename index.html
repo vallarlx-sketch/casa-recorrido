@@ -379,7 +379,7 @@ const MAQUETA = {
   baja: { 'hall':[47.23,55.18], 'sala':[28.67,38.97], 'comedor':[52.12,42.95], 'cocina':[65.93,32.28], 'terraza':[41.07,24.99], 'dormitorio-1':[44.47,68.4] },
   alta: { 'puente':[40.29,50.61], 'dormitorio-master':[44.7,36.39], 'bano-master':[65.97,33.42], 'vestidor-master':[71.48,42.21], 'sala-tv':[75.25,54.84], 'dormitorio-2':[45.21,68.78], 'dormitorio-3':[71.78,62.93] },
 };
-const VERSION = '2';   // se cambia al actualizar las imágenes 360 para que el navegador no use las viejas
+const VERSION = '3';   // se cambia al actualizar las imágenes 360 para que el navegador no use las viejas
 
 /* ═════════ Utilidades ═════════ */
 const $ = s => document.querySelector(s);
@@ -555,7 +555,7 @@ function armarEnlaces(v) {
     const lon = Math.atan2(d.cam[0] - v.cam[0], d.cam[1] - v.cam[1]);
     const lat = rad(otraPlanta ? (d.planta === 'alta' ? 24 : -30) : -10);
     const b = document.createElement('button');
-    b.type = 'button'; b.className = 'ir esmerilado';
+    b.type = 'button'; b.className = 'ir esmerilado oculto';      // nace oculta hasta que se calcula su lugar
     b.textContent = otraPlanta ? (d.planta === 'alta' ? 'Subir a planta alta' : 'Bajar al hall') : d.titulo;
     b.onclick = () => irVista(id);
     $('#puntos').appendChild(b);
