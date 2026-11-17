@@ -378,7 +378,7 @@ const PLANTAS = {
 const VISTAS = [
   { id:'hall',              planta:'baja', titulo:'Hall',              sub:'Doble altura',                    cam:[9.2,15.3],    mira:15,   zona:[8.34,10.32,10.65,17.4],  videos:[['hall','Hall'],['escalera','Escalera y lámparas']] },
   { id:'sala',              planta:'baja', titulo:'Sala principal',    sub:'Doble altura, frente a la piscina', cam:[7.3,20.75], mira:62,   zona:[4.99,9.25,17.44,22.3],   videos:[['sala','Sala'],['sala-detalles','Detalles']] },
-  { id:'comedor',           planta:'baja', titulo:'Comedor',           sub:'Junto a la sala',                 cam:[11.25,18.15], mira:-42,  zona:[9.25,12.16,17.44,22.3] },
+  { id:'comedor',           planta:'baja', titulo:'Comedor',           sub:'Junto a la sala',                 cam:[9.3,18.4],    mira:38,  zona:[9.25,12.16,17.44,22.3] },
   { id:'cocina',            planta:'baja', titulo:'Cocina',            sub:'Con isla y salida a la terraza',  cam:[14.8,20.0],   mira:-78,  zona:[12.21,16.12,17.48,22.3] },
   { id:'terraza',           planta:'baja', titulo:'Terraza y piscina', sub:'Comedor exterior y BBQ',          cam:[10.9,23.55],  mira:-38,  zona:[4.99,16.3,22.6,26.9],    videos:[['piscina','Piscina'],['terraza','Terraza']] },
   { id:'dormitorio-1',      planta:'baja', titulo:'Dormitorio 1',      sub:'Planta baja',                     cam:[7.45,12.05],  mira:-128, zona:[4.99,8.19,9.1,13.36] },
@@ -386,9 +386,9 @@ const VISTAS = [
   { id:'dormitorio-master', planta:'alta', titulo:'Dormitorio máster', sub:'Con vista a la piscina',          cam:[10.5,20.35],  mira:92,   zona:[9.47,13.87,17.58,22.49] },
   { id:'bano-master',       planta:'alta', titulo:'Baño máster',       sub:'Lavamanos doble y ducha',         cam:[14.7,19.7],   mira:58,   zona:[13.99,16.12,17.86,22.43] },
   { id:'vestidor-master',   planta:'alta', titulo:'Vestidor máster',   sub:'Walk-in closet',                  cam:[14.89,17.05], mira:180,  zona:[13.66,16.12,14.43,17.74] },
-  { id:'sala-tv',           planta:'alta', titulo:'Sala de TV',        sub:'Estar de la planta alta',         cam:[14.4,13.52],  mira:155,  zona:[12.54,16.12,12.22,14.31] },
+  { id:'sala-tv',           planta:'alta', titulo:'Sala de TV',        sub:'Estar de la planta alta',         cam:[13.05,13.95], mira:118,  zona:[12.54,16.12,12.22,14.31] },
   { id:'dormitorio-2',      planta:'alta', titulo:'Dormitorio 2',      sub:'Al frente de la casa',            cam:[7.55,11.9],   mira:-122, zona:[4.99,8.19,9.1,12.53] },
-  { id:'dormitorio-3',      planta:'alta', titulo:'Dormitorio 3',      sub:'Con baño y vestidor',             cam:[13.0,11.65],  mira:-112, zona:[10.47,13.68,8.17,12.07] },
+  { id:'dormitorio-3',      planta:'alta', titulo:'Dormitorio 3',      sub:'Con baño y vestidor',             cam:[12.94,10.75], mira:-100, zona:[10.47,13.68,8.17,12.07] },
 ];
 // Flechas dentro de cada vista: a qué otros espacios se puede pasar desde ahí.
 const ENLACES = {
@@ -403,7 +403,7 @@ const MAQUETA = {
   baja: { 'hall':[47.23,55.18], 'sala':[28.67,38.97], 'comedor':[52.12,42.95], 'cocina':[65.93,32.28], 'terraza':[41.07,24.99], 'dormitorio-1':[44.47,68.4] },
   alta: { 'puente':[40.29,50.61], 'dormitorio-master':[44.7,36.39], 'bano-master':[65.97,33.42], 'vestidor-master':[71.48,42.21], 'sala-tv':[75.25,54.84], 'dormitorio-2':[45.21,68.78], 'dormitorio-3':[71.78,62.93] },
 };
-const VERSION = '5';   // se cambia al actualizar las imágenes 360 para que el navegador no use las viejas
+const VERSION = '6';   // se cambia al actualizar las imágenes 360 para que el navegador no use las viejas
 
 /* ═════════ Utilidades ═════════ */
 const $ = s => document.querySelector(s);
