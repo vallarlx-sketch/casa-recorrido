@@ -111,10 +111,9 @@ body[data-modo="tour"] .tour{opacity:1;visibility:visible;transition:opacity .6s
 .ir::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--luz);box-shadow:0 0 0 5px rgba(230,184,115,.22)}
 .ir:hover{background:var(--papel);border-color:var(--papel);color:#17130d}
 .ir.oculto{opacity:0;pointer-events:none}
-.tarjeta{position:absolute;z-index:6;left:clamp(18px,3vw,40px);top:96px;width:300px;border-radius:18px;padding:18px 18px 14px;background:rgba(13,12,10,.74);max-height:calc(100vh - 120px);max-height:calc(100dvh - 120px);overflow-y:auto;scrollbar-width:none}
-.tarjeta::-webkit-scrollbar{display:none}
+.tarjeta{position:absolute;z-index:6;left:clamp(18px,3vw,40px);top:96px;width:300px;border-radius:18px;padding:18px 18px 14px;background:rgba(13,12,10,.74);max-height:calc(100vh - 120px);max-height:calc(100dvh - 120px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:rgba(243,238,230,.35) transparent}
 .tarjeta .cab{display:flex;align-items:center;justify-content:space-between}
-.plano{position:relative;width:100%;max-width:calc((100vh - 420px) * .667);max-width:calc((100dvh - 420px) * .667);margin:12px auto 0}
+.plano{position:relative;width:100%;min-width:110px;max-width:calc((100vh - 470px) * .667);max-width:calc((100dvh - 470px) * .667);margin:12px auto 0}
 .plano img{display:block;width:100%;opacity:.9;user-select:none;-webkit-user-drag:none}
 .plano svg{position:absolute;inset:0;width:100%;height:100%}
 .zona{fill:rgba(230,184,115,0);stroke:rgba(230,184,115,0);stroke-width:2;cursor:pointer;transition:fill .3s,stroke .3s}
@@ -381,7 +380,7 @@ const MAQUETA = {
   baja: { 'hall':[47.23,55.18], 'sala':[28.67,38.97], 'comedor':[52.12,42.95], 'cocina':[65.93,32.28], 'terraza':[41.07,24.99], 'dormitorio-1':[44.47,68.4] },
   alta: { 'puente':[40.29,50.61], 'dormitorio-master':[44.7,36.39], 'bano-master':[65.97,33.42], 'vestidor-master':[71.48,42.21], 'sala-tv':[75.25,54.84], 'dormitorio-2':[45.21,68.78], 'dormitorio-3':[71.78,62.93] },
 };
-const VERSION = '4';   // se cambia al actualizar las imágenes 360 para que el navegador no use las viejas
+const VERSION = '5';   // se cambia al actualizar las imágenes 360 para que el navegador no use las viejas
 
 /* ═════════ Utilidades ═════════ */
 const $ = s => document.querySelector(s);
