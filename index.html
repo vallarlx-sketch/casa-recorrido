@@ -64,9 +64,9 @@ body[data-modo="exterior"] .exterior{opacity:1;visibility:visible;transition:opa
 .panel{display:flex;flex-direction:column;justify-content:center;min-width:0;padding:100px clamp(22px,3.4vw,60px) 44px}
 .panel-izq{justify-self:end;width:min(100%,360px)}
 .lista{display:flex;flex-direction:column;margin:22px 0 30px}
-.lista button{position:relative;display:flex;align-items:baseline;gap:16px;width:100%;text-align:left;padding:9px 0;color:var(--tenue);transition:color .35s,transform .45s cubic-bezier(.2,.7,.2,1)}
+.lista button{position:relative;display:flex;align-items:baseline;gap:16px;width:100%;text-align:left;padding:clamp(4px,.95vh,9px) 0;color:var(--tenue);transition:color .35s,transform .45s cubic-bezier(.2,.7,.2,1)}
 .lista .n{font-size:11px;font-weight:400;letter-spacing:.12em;width:20px;flex:none;opacity:.75}
-.lista .t{font-family:var(--serif);font-size:clamp(20px,2.9vh,27px);line-height:1.15;white-space:nowrap}
+.lista .t{font-family:var(--serif);font-size:clamp(18px,2.7vh,26px);line-height:1.15;white-space:nowrap}
 .lista button::before{content:"";position:absolute;left:-34px;top:50%;width:22px;height:1px;background:var(--luz);transform:scaleX(0);transform-origin:left;transition:transform .45s cubic-bezier(.2,.7,.2,1)}
 .lista button:hover{color:var(--papel)}
 .lista button[aria-current="true"]{color:var(--papel);transform:translateX(10px)}
@@ -146,7 +146,16 @@ body.ver-zonas .tarjeta{width:560px}
 body[data-tour="maqueta"] .maqueta{opacity:1;visibility:visible;transition:opacity .6s ease}
 .maqueta .caja{position:relative;height:min(84vh,84dvh,112vw);aspect-ratio:1692/2064;margin-top:30px;transition:transform .6s cubic-bezier(.5,0,.2,1),opacity .5s ease}
 .maqueta .caja.acercando{transform:scale(2.6);opacity:0}
-.maqueta img{display:block;width:100%;height:100%;user-select:none;-webkit-user-drag:none}
+.maqueta img,.maqueta canvas{display:block;width:100%;height:100%;user-select:none;-webkit-user-drag:none}
+.maqueta canvas{display:none}
+.maqueta.gira .caja{aspect-ratio:1/1;height:min(88vh,88dvh,100vw);margin-top:20px;cursor:grab;touch-action:pan-y}
+.maqueta.gira .caja.girando{cursor:grabbing}
+.maqueta.gira img{display:none}
+.maqueta.gira canvas{display:block}
+.maqueta.gira .ir{transform:translate(-16px,-50%)}
+.pista-giro{position:absolute;z-index:6;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 34px);transform:translateX(-50%);height:38px;padding:0 16px;border-radius:999px;display:none;align-items:center;gap:9px;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;white-space:nowrap;pointer-events:none;transition:opacity .6s}
+body[data-tour="maqueta"] .maqueta.gira ~ .pista-giro{display:flex}
+.pista-giro.fuera{opacity:0}
 .maqueta .ir{transform:translate(-50%,-50%);animation:sube .7s cubic-bezier(.2,.7,.2,1) both}
 .maqueta::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,rgba(13,12,10,0) 55%,rgba(13,12,10,.55) 100%)}
 body[data-tour="maqueta"] .tarjeta,body[data-tour="maqueta"] .pista,body[data-tour="maqueta"] .puntos,body[data-tour="maqueta"] .chips,body[data-tour="maqueta"] .acciones{display:none}
@@ -208,6 +217,9 @@ body.cine-abierto .cine{opacity:1;visibility:visible;transition:opacity .4s ease
   .ir{height:34px;font-size:10px;padding:0 12px 0 9px}
   .maqueta .caja{margin-top:60px;height:min(66dvh,117vw)}
   .maqueta .ir{height:30px;font-size:9.5px;letter-spacing:.1em;padding:0 10px 0 8px}
+  .maqueta.gira .caja{margin-top:40px;height:min(70dvh,104vw)}
+  .maqueta.gira .ir{transform:translate(-13px,-50%)}
+  .pista-giro{bottom:auto;top:calc(env(safe-area-inset-top,0px) + 112px)}
   body[data-tour="maqueta"] .pie{bottom:calc(env(safe-area-inset-bottom,0px) + 26px)}
 }
 .cerrar-plano{display:none}
@@ -221,7 +233,7 @@ body.cine-abierto .cine{opacity:1;visibility:visible;transition:opacity .4s ease
 <header class="barra">
   <p class="marca">DapSam <span>Arquitectos</span></p>
   <nav class="pestañas esmerilado" id="pestañas" aria-label="Secciones">
-    <button type="button" data-ir="exterior"><i>01</i>Exterior</button>
+    <button type="button" data-ir="exterior"><i>01</i>Video</button>
     <button type="button" data-ir="baja"><i>02</i>Planta baja</button>
     <button type="button" data-ir="alta"><i>03</i>Planta alta</button>
   </nav>
@@ -230,8 +242,8 @@ body.cine-abierto .cine{opacity:1;visibility:visible;transition:opacity .4s ease
 <!-- ─────────── Exterior: videos ─────────── -->
 <main class="exterior" id="exterior">
   <aside class="panel panel-izq">
-    <p class="eyebrow">Exterior</p>
-    <nav class="lista" id="lista" aria-label="Vistas del exterior"></nav>
+    <p class="eyebrow">Recorrido en video</p>
+    <nav class="lista" id="lista" aria-label="Partes del video"></nav>
     <button class="pastilla oro solo-compacto" type="button" data-ir="baja" style="align-self:flex-start">Recorrer por dentro
       <svg width="13" height="11" viewBox="0 0 14 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 6h12M8.5 1.5L13 6l-4.5 4.5"/></svg>
     </button>
@@ -281,7 +293,11 @@ body.cine-abierto .cine{opacity:1;visibility:visible;transition:opacity .4s ease
   <canvas id="lienzo"></canvas>
   <div class="sombra"></div>
   <div class="puntos" id="puntos"></div>
-  <div class="maqueta" id="maqueta"><div class="caja" id="maquetaCaja"><img id="maquetaImg" alt="" draggable="false"></div></div>
+  <div class="maqueta" id="maqueta"><div class="caja" id="maquetaCaja"><img id="maquetaImg" alt="" draggable="false"><canvas id="maquetaLienzo"></canvas></div></div>
+  <div class="pista-giro esmerilado" id="pistaGiro">
+    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 8h14M4 5L1 8l3 3M12 5l3 3-3 3"/></svg>
+    Arrastra para girar la maqueta
+  </div>
 
   <aside class="tarjeta esmerilado" id="tarjeta">
     <div class="cab">
@@ -336,14 +352,21 @@ body.cine-abierto .cine{opacity:1;visibility:visible;transition:opacity .4s ease
   </div>
 </div>
 
+<script src="media/maqueta/puntos.js?v=1"></script>
 <script>
 /* ═════════ Contenido: lo único que hay que tocar para cambiar textos, vistas o enlaces ═════════ */
-// Videos del exterior. «variantes» = la misma vista al atardecer y de noche; «una» = se reproduce una sola vez.
+// Recorrido en video. «variantes» = la misma vista al atardecer y de noche; «una» = se reproduce una sola vez.
 const EXTERIOR = [
-  { id:'casa-se-arma', corto:'Inicio',  titulo:'La casa se arma', sub:'Del lote vacío a la casa terminada', archivo:'casa-se-arma', una:true },
-  { id:'fachada',      corto:'Fachada', titulo:'Fachada',         sub:'Frente de la casa',                  variantes:{ tarde:'fachada-dia', noche:'fachada-noche' } },
-  { id:'entrada',      corto:'Entrada', titulo:'Entrada',         sub:'Acceso principal',                   archivo:'entrada' },
-  { id:'jardin',       corto:'Jardín',  titulo:'Jardín',          sub:'Fachada posterior',                  variantes:{ tarde:'jardin-dia', noche:'jardin-noche' } },
+  { id:'casa-se-arma',   corto:'Inicio',   titulo:'La casa se arma',     sub:'Del lote vacío a la casa terminada', archivo:'casa-se-arma', una:true },
+  { id:'fachada',        corto:'Fachada',  titulo:'Fachada',             sub:'Frente de la casa',                  variantes:{ tarde:'fachada-dia', noche:'fachada-noche' } },
+  { id:'entrada',        corto:'Entrada',  titulo:'Entrada',             sub:'Acceso principal',                   archivo:'entrada' },
+  { id:'video-hall',     corto:'Hall',     titulo:'Hall',                sub:'Doble altura',                       archivo:'hall' },
+  { id:'video-escalera', corto:'Escalera', titulo:'Escalera y lámparas', sub:'Mármol y baranda de vidrio',         archivo:'escalera' },
+  { id:'video-sala',     corto:'Sala',     titulo:'Sala principal',      sub:'Doble altura, frente a la piscina',  archivo:'sala' },
+  { id:'video-detalles', corto:'Detalles', titulo:'Detalles de la sala', sub:'Mural, lámparas y comedor',          archivo:'sala-detalles' },
+  { id:'video-piscina',  corto:'Piscina',  titulo:'Piscina',             sub:'5,30 m de largo',                    archivo:'piscina' },
+  { id:'video-terraza',  corto:'Terraza',  titulo:'Terraza',             sub:'Comedor exterior y BBQ',             archivo:'terraza' },
+  { id:'jardin',         corto:'Jardín',   titulo:'Jardín',              sub:'Fachada posterior',                  variantes:{ tarde:'jardin-dia', noche:'jardin-noche' } },
 ];
 // Cada planta: su plano y cómo pasar de metros del modelo 3D a píxeles del plano (px = ox + (x − x0)·e ; py = oy − (y − y0)·e).
 const PLANTAS = {
@@ -624,7 +647,7 @@ function marcar(id) {
 }
 function irVista(id, sinHash) {
   const v = vista(id); if (!v) return;
-  document.body.dataset.tour = 'vista';
+  document.body.dataset.tour = 'vista'; detenerAutoGiro();
   if (v.planta !== planta || !$('#planoSvg').children.length) armarPlanta(v.planta);
   const primera = actual360 === null;
   actual360 = v; marcar(id);
@@ -638,27 +661,85 @@ function irVista(id, sinHash) {
   const lista = deLaPlanta(v.planta), sig = lista[(lista.indexOf(v) + 1) % lista.length];
   new Image().src = `media/360/${sig.id}.jpg?v=${VERSION}`;      // deja lista la siguiente
 }
+/* Maqueta giratoria: una serie de imágenes alrededor de la casa; los nombres siguen a cada cuarto en cada cuadro. */
+const GIRO = window.MAQUETA_GIRO || null;
+const lienzoM = $('#maquetaLienzo'), ctxM = lienzoM.getContext('2d');
+const serie = { baja:[], alta:[] };
+let cuadro = 0, autoGiro = 0, etiquetas = [];
+function cargarSerie(nombre) {
+  if (!GIRO || serie[nombre].length) return;
+  for (let k = 0; k < GIRO.n; k++) {
+    const im = new Image();
+    im.onload = () => { if (nombre === planta && k === cuadro) pintarCuadro(); };
+    im.src = `media/maqueta/${nombre}-${String(k).padStart(2, '0')}.jpg?v=${VERSION}`;
+    serie[nombre].push(im);
+  }
+}
+function pintarCuadro() {
+  const im = serie[planta][cuadro];
+  if (im && im.complete && im.naturalWidth) {
+    if (lienzoM.width !== im.naturalWidth) { lienzoM.width = im.naturalWidth; lienzoM.height = im.naturalHeight; }
+    ctxM.drawImage(im, 0, 0);
+  }
+  const pos = GIRO[planta][cuadro];
+  for (const e of etiquetas) { const [x, y] = pos[e.id]; e.b.style.left = x + '%'; e.b.style.top = y + '%'; }
+}
+function ponerCuadro(k) { cuadro = ((Math.round(k) % GIRO.n) + GIRO.n) % GIRO.n; pintarCuadro(); }
+function detenerAutoGiro() { clearInterval(autoGiro); autoGiro = 0; }
+(function arrastreMaqueta() {
+  const caja = $('#maquetaCaja');
+  let x0 = 0, k0 = 0, activo = false, vel = 0, ultimoX = 0, anim = 0;
+  caja.addEventListener('pointerdown', e => {
+    if (!GIRO || e.target.closest('.ir')) return;
+    activo = true; x0 = ultimoX = e.clientX; k0 = cuadro; vel = 0; cancelAnimationFrame(anim); detenerAutoGiro();
+    caja.classList.add('girando'); caja.setPointerCapture(e.pointerId); $('#pistaGiro').classList.add('fuera');
+  });
+  caja.addEventListener('pointermove', e => {
+    if (!activo) return;
+    const paso = Math.max(7, caja.clientWidth / 60);          // píxeles de arrastre por cuadro
+    vel = (e.clientX - ultimoX) / paso; ultimoX = e.clientX;
+    ponerCuadro(k0 - (e.clientX - x0) / paso);
+  });
+  const soltar = () => {
+    if (!activo) return; activo = false; caja.classList.remove('girando');
+    let pos = cuadro, v = Math.max(-1.2, Math.min(1.2, vel));   // un poco de inercia al soltar
+    const seguir = () => { v *= .9; if (Math.abs(v) < .05) return; pos -= v; ponerCuadro(pos); anim = requestAnimationFrame(seguir); };
+    seguir();
+  };
+  caja.addEventListener('pointerup', soltar); caja.addEventListener('pointercancel', soltar);
+})();
 function verMaqueta(nombre) {          // entrada a una planta: la maqueta con un punto por espacio
   const p = PLANTAS[nombre], caja = $('#maquetaCaja');
   if (planta !== nombre || !$('#planoSvg').children.length) armarPlanta(nombre);
   document.body.dataset.tour = 'maqueta';
   document.body.classList.remove('plano-abierto');
   caja.classList.remove('acercando');
-  $('#maquetaImg').src = `media/maqueta-${nombre}.jpg?v=${VERSION}`;
-  $('#maquetaImg').alt = 'Maqueta de la ' + p.nombre.toLowerCase();
+  $('#maqueta').classList.toggle('gira', !!GIRO);
+  if (!GIRO) { $('#maquetaImg').src = `media/maqueta-${nombre}.jpg?v=${VERSION}`; $('#maquetaImg').alt = 'Maqueta de la ' + p.nombre.toLowerCase(); }
   caja.querySelectorAll('.ir').forEach(b => b.remove());
+  etiquetas = [];
   deLaPlanta(nombre).forEach((v, k) => {
-    const [x, y] = MAQUETA[nombre][v.id];
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'ir esmerilado'; b.textContent = v.titulo;
-    b.style.left = x + '%'; b.style.top = y + '%'; b.style.animationDelay = (0.25 + k * 0.06) + 's';
+    if (!GIRO) { const [x, y] = MAQUETA[nombre][v.id]; b.style.left = x + '%'; b.style.top = y + '%'; }
+    b.style.animationDelay = (0.25 + k * 0.06) + 's';
     b.addEventListener('pointerenter', () => { new Image().src = `media/360/${v.id}.jpg?v=${VERSION}`; });
     b.onclick = () => {
-      caja.style.transformOrigin = `${x}% ${y}%`; caja.classList.add('acercando');
+      detenerAutoGiro();
+      caja.style.transformOrigin = `${b.style.left} ${b.style.top}`; caja.classList.add('acercando');
       setTimeout(() => irVista(v.id), 480);
     };
     caja.appendChild(b);
+    etiquetas.push({ id: v.id, b });
   });
+  if (GIRO) {
+    cargarSerie(nombre); pintarCuadro();
+    detenerAutoGiro();
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {       // gira sola, despacio, hasta que alguien la toca
+      autoGiro = setInterval(() => { if (modo === 'tour' && document.body.dataset.tour === 'maqueta') ponerCuadro(cuadro + 1); }, 170);
+      caja.addEventListener('pointerenter', detenerAutoGiro, { once: true });
+    }
+  }
   $('#tourSub').textContent = 'Elige un espacio'; $('#tourTitulo').textContent = p.nombre;
   [$('#tourSub'), $('#tourTitulo')].forEach(e => { e.classList.remove('cambia'); void e.offsetWidth; e.classList.add('cambia'); });
   document.querySelectorAll('#pestañas button').forEach(b => b.setAttribute('aria-current', b.dataset.ir === nombre));
@@ -739,7 +820,7 @@ $('#cuentaAlta').textContent = deLaPlanta('alta').length + ' espacios';
 const inicial = location.hash.slice(1);      // se lee antes de arrancar: el exterior escribe su propio enlace
 irExterior(0);
 if (inicial && (vista(inicial) || PLANTAS[inicial] || EXTERIOR.some(v => v.id === inicial))) ir(inicial); else ponerModo('exterior');
-window.estado = () => ({ modo, tour: document.body.dataset.tour, planta, vista: actual360 && actual360.id, exterior: EXTERIOR[ext].id, giro: +(giro * 180 / Math.PI).toFixed(1), textura: !!textura, enlaces: enlaces.length });
+window.estado = () => ({ modo, tour: document.body.dataset.tour, cuadro, gira: !!GIRO, planta, vista: actual360 && actual360.id, exterior: EXTERIOR[ext].id, giro: +(giro * 180 / Math.PI).toFixed(1), textura: !!textura, enlaces: enlaces.length });
 </script>
 </body>
 </html>
