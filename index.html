@@ -6,10 +6,10 @@
 <title>Recorrido interactivo · DapSam Arquitectos</title>
 <meta name="theme-color" content="#0d0c0a">
 <meta name="robots" content="noindex">
-<meta name="description" content="Recorre la casa espacio por espacio: fachada, hall, sala, piscina y jardín, de la tarde a la noche.">
+<meta name="description" content="Recorre la casa por fuera y por dentro: cada espacio en 360 grados, planta por planta.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Recorrido interactivo · DapSam Arquitectos">
-<meta property="og:description" content="Recorre la casa espacio por espacio, de la tarde a la noche.">
+<meta property="og:description" content="Recorre la casa por fuera y por dentro, en 360 grados.">
 <meta property="og:url" content="https://vallarlx-sketch.github.io/casa-recorrido/">
 <meta property="og:image" content="https://vallarlx-sketch.github.io/casa-recorrido/media/compartir.jpg">
 <meta property="og:image:width" content="1200">
@@ -20,11 +20,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 :root{
-  --tinta:#0d0c0a;
-  --papel:#f3eee6;
-  --tenue:rgba(243,238,230,.6);
-  --linea:rgba(243,238,230,.16);
-  --luz:#e6b873;
+  --tinta:#0d0c0a; --papel:#f3eee6; --tenue:rgba(243,238,230,.62); --linea:rgba(243,238,230,.18); --luz:#e6b873;
+  --vidrio:rgba(13,12,10,.52);
   --serif:"Cormorant Garamond","Didot","Bodoni 72",Georgia,serif;
   --sans:"Jost","Avenir Next","Helvetica Neue",Arial,sans-serif;
 }
@@ -35,494 +32,713 @@ body{background:var(--tinta);color:var(--papel);font-family:var(--sans);font-wei
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 button:focus-visible{outline:2px solid var(--luz);outline-offset:3px}
 svg{display:block}
+.marca{font-size:12px;font-weight:500;letter-spacing:.34em;text-transform:uppercase;white-space:nowrap}
+.marca span{font-weight:300;color:var(--tenue)}
+.eyebrow{font-size:11px;font-weight:400;letter-spacing:.3em;text-transform:uppercase;color:var(--tenue)}
+.esmerilado{background:var(--vidrio);border:1px solid var(--linea);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+.pastilla{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 16px;border-radius:999px;font-size:10.5px;font-weight:400;letter-spacing:.18em;text-transform:uppercase;white-space:nowrap;transition:background .3s,color .3s,border-color .3s}
+.pastilla:hover{border-color:var(--luz)}
+.pastilla.llena{background:var(--papel);border-color:var(--papel);color:#17130d}
+.pastilla.oro{background:var(--luz);border-color:var(--luz);color:#1a140b}
+.redondo{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;transition:background .3s,color .3s,border-color .3s}
+.redondo:hover{background:var(--papel);border-color:var(--papel);color:#17130d}
 
-/* Fondo: la vista actual, desenfocada */
+/* ── Barra superior ── */
+.barra{position:fixed;z-index:30;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:calc(env(safe-area-inset-top,0px) + 20px) clamp(18px,3vw,40px) 0;pointer-events:none}
+.barra > *{pointer-events:auto}
+.pestañas{display:flex;gap:4px;padding:4px;border-radius:999px}
+.pestañas button{display:flex;align-items:baseline;gap:8px;height:36px;padding:0 16px;border-radius:999px;font-size:10.5px;font-weight:400;letter-spacing:.2em;text-transform:uppercase;color:var(--tenue);white-space:nowrap;transition:background .35s,color .35s}
+.pestañas button i{font-style:normal;font-size:9px;letter-spacing:.1em;opacity:.7}
+.pestañas button:hover{color:var(--papel)}
+.pestañas button[aria-current="true"]{background:var(--papel);color:#17130d}
+
+/* ── Fondo desenfocado (exterior) ── */
 .fondo{position:fixed;inset:-80px;z-index:0;pointer-events:none}
 .fondo i{position:absolute;inset:0;background-size:cover;background-position:center;filter:blur(70px) saturate(1.25) brightness(.34);opacity:0;transition:opacity 1.1s ease}
 .fondo i.visible{opacity:1}
 .fondo::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(13,12,10,0) 30%,rgba(13,12,10,.72) 100%)}
 
-.app{position:relative;height:100vh;height:100dvh;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}
-
-.marca{font-size:12px;font-weight:500;letter-spacing:.34em;text-transform:uppercase;white-space:nowrap}
-.marca span{font-weight:300;color:var(--tenue)}
-.eyebrow{font-size:11px;font-weight:400;letter-spacing:.3em;text-transform:uppercase;color:var(--tenue)}
-
-/* Panel izquierdo: marca y lista de vistas */
-.panel{display:flex;flex-direction:column;min-width:0;padding:44px clamp(22px,3.4vw,60px)}
+/* ── Modo exterior ── */
+.exterior{position:fixed;inset:0;z-index:1;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);opacity:0;visibility:hidden;transition:opacity .6s ease,visibility 0s .6s}
+body[data-modo="exterior"] .exterior{opacity:1;visibility:visible;transition:opacity .6s ease}
+.panel{display:flex;flex-direction:column;justify-content:center;min-width:0;padding:100px clamp(22px,3.4vw,60px) 44px}
 .panel-izq{justify-self:end;width:min(100%,360px)}
-.panel-izq .eyebrow{margin-top:10px}
-.lista{flex:1;display:flex;flex-direction:column;justify-content:center;margin:18px 0}
-.lista button{position:relative;display:flex;align-items:baseline;gap:16px;width:100%;text-align:left;padding:clamp(5px,1.05vh,11px) 0;color:var(--tenue);transition:color .35s ease,transform .45s cubic-bezier(.2,.7,.2,1)}
-.lista .n{font-size:11px;font-weight:400;letter-spacing:.12em;width:20px;flex:none;font-variant-numeric:tabular-nums;opacity:.75}
-.lista .t{font-family:var(--serif);font-weight:400;font-size:clamp(18px,2.75vh,26px);line-height:1.15;white-space:nowrap}
+.lista{display:flex;flex-direction:column;margin:22px 0 30px}
+.lista button{position:relative;display:flex;align-items:baseline;gap:16px;width:100%;text-align:left;padding:9px 0;color:var(--tenue);transition:color .35s,transform .45s cubic-bezier(.2,.7,.2,1)}
+.lista .n{font-size:11px;font-weight:400;letter-spacing:.12em;width:20px;flex:none;opacity:.75}
+.lista .t{font-family:var(--serif);font-size:clamp(20px,2.9vh,27px);line-height:1.15;white-space:nowrap}
 .lista button::before{content:"";position:absolute;left:-34px;top:50%;width:22px;height:1px;background:var(--luz);transform:scaleX(0);transform-origin:left;transition:transform .45s cubic-bezier(.2,.7,.2,1)}
 .lista button:hover{color:var(--papel)}
 .lista button[aria-current="true"]{color:var(--papel);transform:translateX(10px)}
 .lista button[aria-current="true"] .n{color:var(--luz);opacity:1}
 .lista button[aria-current="true"]::before{transform:scaleX(1)}
-
-.botones{display:flex;flex-wrap:wrap;gap:10px}
-.plano-btn{display:none!important}
-.auto{display:inline-flex;align-items:center;gap:12px;white-space:nowrap;padding:13px 20px 13px 16px;border:1px solid var(--linea);border-radius:999px;font-size:11px;font-weight:400;letter-spacing:.22em;text-transform:uppercase;transition:border-color .3s,background .3s,color .3s}
-.auto:hover{border-color:var(--luz)}
-.auto.activo{background:var(--luz);border-color:var(--luz);color:#1a140b}
-.auto .pausa{display:none}
-.auto.activo .pausa{display:block}
-.auto.activo .play{display:none}
-.atajo{margin-top:16px;font-size:11px;letter-spacing:.08em;color:rgba(243,238,230,.38)}
-
-/* Escena: el video */
-.escena{position:relative;align-self:center;height:calc(100vh - 44px);height:calc(100dvh - 44px);aspect-ratio:9/16;border-radius:16px;overflow:hidden;background:#000;box-shadow:0 50px 140px rgba(0,0,0,.65),0 0 0 1px rgba(243,238,230,.07);touch-action:pan-y}
+.escena{position:relative;align-self:center;height:calc(100vh - 110px);height:calc(100dvh - 110px);margin-top:66px;aspect-ratio:9/16;border-radius:16px;overflow:hidden;background:#000;box-shadow:0 50px 140px rgba(0,0,0,.65),0 0 0 1px rgba(243,238,230,.07);touch-action:pan-y}
 .escena video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 650ms ease}
 .escena video.visible{opacity:1}
-.velo{position:absolute;inset:0;z-index:3;pointer-events:none;background:linear-gradient(180deg,rgba(8,7,6,.5) 0%,rgba(8,7,6,0) 17%,rgba(8,7,6,0) 52%,rgba(8,7,6,.82) 100%)}
-
-.cabecera{position:absolute;z-index:5;top:0;left:0;right:0;display:none;align-items:center;justify-content:space-between;gap:12px;padding:calc(env(safe-area-inset-top,0px) + 18px) 18px 0}
-.cabecera .marca{font-size:10.5px;letter-spacing:.28em;line-height:1.5}
-.cabecera .marca span{display:block}
-.cabecera .acciones{display:flex;gap:8px}
-.pastilla{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 13px;border-radius:999px;background:rgba(13,12,10,.42);border:1px solid var(--linea);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);font-size:10.5px;font-weight:400;letter-spacing:.18em;text-transform:uppercase}
-.pastilla.activo{background:var(--luz);border-color:var(--luz);color:#1a140b}
-.pastilla .pausa{display:none}
-.pastilla.activo .pausa{display:block}
-.pastilla.activo .play{display:none}
-
-.rotulo{position:absolute;z-index:5;left:30px;right:120px;bottom:38px}
-.rotulo .sub{font-size:11px;font-weight:400;letter-spacing:.28em;text-transform:uppercase;color:var(--luz)}
-.rotulo h1{font-family:var(--serif);font-weight:400;font-size:clamp(34px,5.4vh,52px);line-height:1.02;letter-spacing:-.005em;margin-top:8px;text-wrap:balance}
-.rotulo .cambia{animation:sube .7s cubic-bezier(.2,.7,.2,1) both}
-.rotulo h1.cambia{animation-delay:.06s}
+.velo{position:absolute;inset:0;z-index:3;pointer-events:none;background:linear-gradient(180deg,rgba(8,7,6,.45) 0%,rgba(8,7,6,0) 17%,rgba(8,7,6,0) 52%,rgba(8,7,6,.82) 100%)}
+.rotulo{position:absolute;z-index:5;left:28px;right:28px;bottom:34px}
+.sub{font-size:11px;font-weight:400;letter-spacing:.28em;text-transform:uppercase;color:var(--luz)}
+.titulo{font-family:var(--serif);font-weight:400;font-size:clamp(34px,5.2vh,50px);line-height:1.02;margin-top:8px;text-wrap:balance}
+.cambia{animation:sube .7s cubic-bezier(.2,.7,.2,1) both}
 @keyframes sube{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-
 .fila{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
-.momento{display:inline-flex;padding:3px;border-radius:999px;background:rgba(13,12,10,.45);border:1px solid var(--linea);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.momento{display:inline-flex;padding:3px;border-radius:999px}
 .momento button{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 14px;border-radius:999px;font-size:10.5px;font-weight:400;letter-spacing:.16em;text-transform:uppercase;color:var(--tenue);transition:background .35s,color .35s}
 .momento button[aria-pressed="true"]{background:var(--papel);color:#17130d}
-.repetir{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 16px;border-radius:999px;background:rgba(13,12,10,.45);border:1px solid var(--linea);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);font-size:10.5px;font-weight:400;letter-spacing:.16em;text-transform:uppercase;animation:sube .6s ease both}
-.repetir.principal{background:var(--papel);border-color:var(--papel);color:#17130d}
-.repetir.icono{width:40px;padding:0;justify-content:center}
-
-.flechas{position:absolute;z-index:5;right:24px;bottom:38px;display:flex;gap:8px}
-.flechas button{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:rgba(13,12,10,.42);border:1px solid var(--linea);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);transition:background .3s,border-color .3s,color .3s}
-.flechas button:hover{background:var(--papel);border-color:var(--papel);color:#17130d}
-
 .progreso{position:absolute;z-index:5;left:0;right:0;bottom:0;height:2px;background:rgba(243,238,230,.14)}
-.progreso i{display:block;height:100%;width:100%;background:var(--luz);transform-origin:left;transform:scaleX(0)}
-
+.progreso i{display:block;height:100%;background:var(--luz);transform-origin:left;transform:scaleX(0)}
+.panel-der{justify-self:start;width:min(100%,420px)}
+.invita h2{font-family:var(--serif);font-weight:400;font-size:clamp(28px,3.6vh,38px);line-height:1.08;margin-top:14px;text-wrap:balance}
+.invita p.texto{margin-top:14px;font-size:14px;line-height:1.6;color:var(--tenue);max-width:34ch}
+.plantas{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:26px}
+.plantas button{position:relative;border-radius:14px;overflow:hidden;aspect-ratio:4/5;text-align:left;background-size:cover;background-position:center;box-shadow:inset 0 0 0 1px var(--linea);transition:transform .5s cubic-bezier(.2,.7,.2,1),box-shadow .3s}
+.plantas button::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,7,6,.05) 30%,rgba(8,7,6,.86) 100%)}
+.plantas button:hover{transform:translateY(-4px);box-shadow:inset 0 0 0 1px var(--luz)}
+.plantas span{position:absolute;left:14px;right:14px;bottom:13px}
+.plantas b{display:block;font-family:var(--serif);font-weight:400;font-size:22px;line-height:1.1}
+.plantas small{display:block;margin-top:5px;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--tenue)}
 .tira{display:none}
 
-/* Panel derecho: plano */
-.panel-der{justify-self:start;width:min(100%,480px);justify-content:center;gap:20px}
-.panel-der .titulo-plano{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
-.cerrar{display:none}
-.plano{position:relative;width:100%;max-width:calc((100vh - 230px) * 820 / 1229);aspect-ratio:820/1229;align-self:center}
-.plano img{position:absolute;inset:0;width:100%;height:100%;opacity:.92;user-select:none;-webkit-user-drag:none}
-.punto{position:absolute;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;display:grid;place-items:center}
-.punto::before{content:"";width:11px;height:11px;border-radius:50%;background:var(--papel);box-shadow:0 0 0 4px rgba(13,12,10,.55);transition:transform .35s cubic-bezier(.2,.7,.2,1),background .35s}
-.punto::after{content:"";position:absolute;inset:6px;border-radius:50%;border:1px solid var(--luz);opacity:0}
-.punto:hover::before{transform:scale(1.3)}
-.punto[aria-current="true"]::before{background:var(--luz);transform:scale(1.35)}
-.punto[aria-current="true"]::after{animation:onda 2.2s ease-out infinite}
-@keyframes onda{0%{opacity:.9;transform:scale(.6)}100%{opacity:0;transform:scale(1.9)}}
-.punto b{position:absolute;left:50%;bottom:calc(100% - 2px);transform:translate(-50%,4px);white-space:nowrap;padding:5px 10px;border-radius:6px;background:var(--papel);color:#17130d;font-size:10px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s}
-.punto:hover b,.punto[aria-current="true"] b{opacity:1;transform:translate(-50%,0)}
-.punto:hover{z-index:3}
-.punto[aria-current="true"]{z-index:2}
-.nota{font-size:12.5px;line-height:1.55;color:var(--tenue);max-width:32ch}
+/* ── Modo 360 ── */
+.tour{position:fixed;inset:0;z-index:1;opacity:0;visibility:hidden;transition:opacity .6s ease,visibility 0s .6s}
+body[data-modo="tour"] .tour{opacity:1;visibility:visible;transition:opacity .6s ease}
+#lienzo{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:none;transition:opacity .45s ease}
+#lienzo.arrastrando{cursor:grabbing}
+#lienzo.cargando{opacity:0}
+.tour .sombra{position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(8,7,6,.5) 0%,rgba(8,7,6,0) 16%,rgba(8,7,6,0) 62%,rgba(8,7,6,.72) 100%)}
+.puntos{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.ir{position:absolute;left:0;top:0;display:inline-flex;align-items:center;gap:9px;height:38px;padding:0 15px 0 11px;border-radius:999px;font-size:10.5px;font-weight:400;letter-spacing:.16em;text-transform:uppercase;white-space:nowrap;pointer-events:auto;will-change:transform;transition:background .3s,color .3s,border-color .3s,opacity .3s}
+.ir::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--luz);box-shadow:0 0 0 5px rgba(230,184,115,.22)}
+.ir:hover{background:var(--papel);border-color:var(--papel);color:#17130d}
+.ir.oculto{opacity:0;pointer-events:none}
+.tarjeta{position:absolute;z-index:6;left:clamp(18px,3vw,40px);top:96px;width:300px;border-radius:18px;padding:18px 18px 14px;background:rgba(13,12,10,.74)}
+.tarjeta .cab{display:flex;align-items:center;justify-content:space-between}
+.plano{position:relative;width:100%;margin-top:12px}
+.plano img{display:block;width:100%;opacity:.9;user-select:none;-webkit-user-drag:none}
+.plano svg{position:absolute;inset:0;width:100%;height:100%}
+.zona{fill:rgba(230,184,115,0);stroke:rgba(230,184,115,0);stroke-width:2;cursor:pointer;transition:fill .3s,stroke .3s}
+.zona:hover{fill:rgba(230,184,115,.2);stroke:rgba(230,184,115,.7)}
+.zona[aria-current="true"]{fill:rgba(230,184,115,.3);stroke:var(--luz)}
+body.ver-zonas .zona{fill:rgba(230,184,115,.22);stroke:rgba(230,184,115,.8)}
+body.ver-zonas .tarjeta{width:560px}
+.camara{fill:var(--papel);stroke:rgba(13,12,10,.6);stroke-width:3;pointer-events:none;transition:fill .3s}
+.camara[aria-current="true"]{fill:var(--luz)}
+.mira{fill:rgba(230,184,115,.4);pointer-events:none}
+.cuartos{display:flex;flex-direction:column;margin-top:10px;border-top:1px solid var(--linea);padding-top:8px}
+.cuartos button{display:flex;align-items:baseline;gap:12px;padding:6px 2px;text-align:left;color:var(--tenue);transition:color .3s}
+.cuartos button .n{font-size:10px;letter-spacing:.1em;width:16px;opacity:.7}
+.cuartos button .t{font-family:var(--serif);font-size:18px;line-height:1.15}
+.cuartos button:hover{color:var(--papel)}
+.cuartos button[aria-current="true"]{color:var(--papel)}
+.cuartos button[aria-current="true"] .n{color:var(--luz);opacity:1}
+.pie{position:absolute;z-index:6;left:clamp(18px,3vw,40px);right:clamp(18px,3vw,40px);bottom:calc(env(safe-area-inset-bottom,0px) + 30px);display:flex;align-items:flex-end;justify-content:space-between;gap:20px;pointer-events:none}
+.pie > *{pointer-events:auto}
+.pie .titulo{font-size:clamp(34px,5.6vh,56px);text-shadow:0 2px 30px rgba(0,0,0,.45)}
+.pie .sub{text-shadow:0 1px 14px rgba(0,0,0,.6)}
+.acciones{display:flex;gap:8px;align-items:center}
+.pista{position:absolute;z-index:6;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 36px);transform:translateX(-50%);height:38px;padding:0 16px;border-radius:999px;display:flex;align-items:center;gap:9px;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;white-space:nowrap;pointer-events:none;transition:opacity .6s}
+.pista.fuera{opacity:0}
+.chips{display:none}
+.abrir-plano{display:none}
 
-/* Ventanas medianas: lista y video; el plano se abre encima */
+/* ── Maqueta en corte: entrada a cada planta ── */
+.maqueta{position:absolute;inset:0;z-index:4;display:grid;place-items:center;background:#0d0c0a;opacity:0;visibility:hidden;transition:opacity .6s ease,visibility 0s .6s}
+body[data-tour="maqueta"] .maqueta{opacity:1;visibility:visible;transition:opacity .6s ease}
+.maqueta .caja{position:relative;height:min(84vh,84dvh,112vw);aspect-ratio:1692/2064;margin-top:30px;transition:transform .6s cubic-bezier(.5,0,.2,1),opacity .5s ease}
+.maqueta .caja.acercando{transform:scale(2.6);opacity:0}
+.maqueta img{display:block;width:100%;height:100%;user-select:none;-webkit-user-drag:none}
+.maqueta .ir{transform:translate(-50%,-50%);animation:sube .7s cubic-bezier(.2,.7,.2,1) both}
+.maqueta::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,rgba(13,12,10,0) 55%,rgba(13,12,10,.55) 100%)}
+body[data-tour="maqueta"] .tarjeta,body[data-tour="maqueta"] .pista,body[data-tour="maqueta"] .puntos,body[data-tour="maqueta"] .chips,body[data-tour="maqueta"] .acciones{display:none}
+body[data-tour="maqueta"] .pie{z-index:7}
+
+/* ── Video dentro del recorrido ── */
+.cine{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:rgba(8,7,6,.86);-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);opacity:0;visibility:hidden;transition:opacity .4s ease,visibility 0s .4s}
+body.cine-abierto .cine{opacity:1;visibility:visible;transition:opacity .4s ease}
+.cine .marco{position:relative;height:min(86vh,86dvh);aspect-ratio:9/16;max-width:92vw;border-radius:16px;overflow:hidden;background:#000;box-shadow:0 40px 120px rgba(0,0,0,.7)}
+.cine video{width:100%;height:100%;object-fit:cover;display:block}
+.cine .cerrar{position:absolute;top:14px;right:14px;z-index:2}
+.cine .otros{position:absolute;left:14px;right:14px;bottom:14px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.cine .otros button[aria-pressed="true"]{background:var(--papel);border-color:var(--papel);color:#17130d}
+
+/* ── Ventanas medianas ── */
 @media (max-width:1179px),(max-aspect-ratio:3/2){
-  .app{grid-template-columns:minmax(0,360px) auto;justify-content:center}
+  .exterior{grid-template-columns:minmax(0,360px) auto;justify-content:center}
   .panel-izq{justify-self:stretch;width:auto}
-  .plano-btn{display:inline-flex!important}
-  .panel-der{position:fixed;inset:0;z-index:20;width:100%;height:100%;align-self:stretch;justify-self:stretch;padding:calc(env(safe-area-inset-top,0px) + 22px) 22px calc(env(safe-area-inset-bottom,0px) + 22px);background:rgba(13,12,10,.9);-webkit-backdrop-filter:blur(26px);backdrop-filter:blur(26px);align-items:center;opacity:0;visibility:hidden;transform:translateY(18px);transition:opacity .4s ease,transform .4s ease,visibility 0s .4s}
-  body.plano-abierto .panel-der{opacity:1;visibility:visible;transform:none;transition:opacity .4s ease,transform .4s ease}
-  .panel-der .titulo-plano{width:min(100%,460px)}
-  .plano{max-width:min(100%,460px,calc((100vh - 190px) * 820 / 1229))}
-  .cerrar{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;border:1px solid var(--linea)}
-  .nota{align-self:center;text-align:center}
+  .panel-der{display:none}
+  .solo-compacto{display:inline-flex!important}
 }
+.solo-compacto{display:none!important}
 
-/* Teléfono y pantallas verticales */
+/* ── Teléfono ── */
 @media (max-width:900px),(max-aspect-ratio:1/1){
-  .app{display:block}
-  .panel-izq,.flechas{display:none}
-  .escena{position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:auto;height:100%;max-width:100%;align-self:stretch;justify-self:stretch;aspect-ratio:9/16;border-radius:0;box-shadow:0 0 120px rgba(0,0,0,.6)}
-  .cabecera{display:flex}
-  .velo{background:linear-gradient(180deg,rgba(8,7,6,.55) 0%,rgba(8,7,6,0) 16%,rgba(8,7,6,0) 44%,rgba(8,7,6,.9) 100%)}
-  .rotulo{left:20px;right:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 148px)}
-  .rotulo h1{font-size:clamp(34px,10vw,46px)}
+  .barra{padding:calc(env(safe-area-inset-top,0px) + 14px) 14px 0;flex-direction:column;align-items:stretch;gap:10px}
+  .barra .marca{font-size:10.5px;letter-spacing:.28em;text-align:center}
+  .pestañas{justify-content:space-between}
+  .pestañas button{flex:1;justify-content:center;padding:0 6px;font-size:10px;letter-spacing:.14em}
+  .pestañas button i{display:none}
+  .exterior{display:block}
+  .panel-izq{display:none}
+  .escena{position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:auto;height:100%;max-width:100%;margin:0;border-radius:0;box-shadow:0 0 120px rgba(0,0,0,.6)}
+  .velo{background:linear-gradient(180deg,rgba(8,7,6,.7) 0%,rgba(8,7,6,0) 22%,rgba(8,7,6,0) 44%,rgba(8,7,6,.9) 100%)}
+  .rotulo{left:20px;right:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 140px)}
+  .titulo{font-size:clamp(32px,9.5vw,44px)}
   .fila{margin-top:14px}
-  .progreso{bottom:calc(env(safe-area-inset-bottom,0px) + 128px);left:20px;right:20px;height:1px}
-  .tira{position:absolute;z-index:5;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);display:flex;gap:8px;padding:0 20px;overflow-x:auto;scrollbar-width:none;scroll-snap-type:x proximity;scroll-padding:0 20px}
+  .progreso{bottom:calc(env(safe-area-inset-bottom,0px) + 122px);left:20px;right:20px;height:1px}
+  .tira{position:absolute;z-index:5;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);display:flex;gap:8px;padding:0 20px;overflow-x:auto;scrollbar-width:none}
   .tira::-webkit-scrollbar{display:none}
-  .tira button{position:relative;flex:none;width:72px;height:100px;border-radius:9px;overflow:hidden;background-size:cover;background-position:center;scroll-snap-align:start;box-shadow:inset 0 0 0 1px rgba(243,238,230,.18);opacity:.72;transition:opacity .3s,transform .3s}
+  .tira button{position:relative;flex:none;width:72px;height:96px;border-radius:9px;overflow:hidden;background-size:cover;background-position:center;box-shadow:inset 0 0 0 1px rgba(243,238,230,.18);opacity:.72}
   .tira button::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,7,6,0) 45%,rgba(8,7,6,.85) 100%)}
-  .tira button span{position:absolute;left:0;right:0;bottom:7px;text-align:center;font-size:10px;font-weight:400;letter-spacing:.08em;text-transform:uppercase}
+  .tira button span{position:absolute;left:0;right:0;bottom:7px;text-align:center;font-size:10px;letter-spacing:.08em;text-transform:uppercase}
   .tira button[aria-current="true"]{opacity:1;box-shadow:inset 0 0 0 1.5px var(--luz)}
+  .tarjeta{left:0;right:0;top:0;bottom:0;width:auto;border-radius:0;border:0;z-index:40;padding:calc(env(safe-area-inset-top,0px) + 22px) 22px 22px;display:flex;flex-direction:column;justify-content:center;background:rgba(13,12,10,.93);opacity:0;visibility:hidden;transform:translateY(16px);transition:opacity .4s,transform .4s,visibility 0s .4s}
+  body.plano-abierto .tarjeta{opacity:1;visibility:visible;transform:none;transition:opacity .4s,transform .4s}
+  .tarjeta .plano{max-width:min(100%,calc((100dvh - 330px) * .667));align-self:center}
+  .tarjeta .cerrar-plano{display:grid!important}
+  .pie{left:20px;right:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 72px);flex-direction:column;align-items:flex-start;gap:14px}
+  .pie .titulo{font-size:clamp(32px,9.5vw,44px)}
+  .acciones .flecha{display:none}
+  .abrir-plano{display:inline-flex}
+  .pista{bottom:auto;top:calc(env(safe-area-inset-top,0px) + 112px)}
+  .chips{position:absolute;z-index:6;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 16px);display:flex;gap:8px;padding:0 20px;overflow-x:auto;scrollbar-width:none}
+  .chips::-webkit-scrollbar{display:none}
+  .chips button{flex:none;height:40px;padding:0 16px;border-radius:999px;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;white-space:nowrap;color:var(--tenue)}
+  .chips button[aria-current="true"]{background:var(--papel);border-color:var(--papel);color:#17130d}
+  .ir{height:34px;font-size:10px;padding:0 12px 0 9px}
+  .maqueta .caja{margin-top:60px;height:min(66dvh,117vw)}
+  .maqueta .ir{height:30px;font-size:9.5px;letter-spacing:.1em;padding:0 10px 0 8px}
+  body[data-tour="maqueta"] .pie{bottom:calc(env(safe-area-inset-bottom,0px) + 26px)}
 }
-@media (prefers-reduced-motion:reduce){
-  .punto[aria-current="true"]::after,.rotulo .cambia,.repetir{animation:none}
-}
+.cerrar-plano{display:none}
+@media (prefers-reduced-motion:reduce){.cambia{animation:none}}
 </style>
 </head>
-<body>
+<body data-modo="exterior">
 
 <div class="fondo" aria-hidden="true"><i></i><i></i></div>
 
-<main class="app">
+<header class="barra">
+  <p class="marca">DapSam <span>Arquitectos</span></p>
+  <nav class="pestañas esmerilado" id="pestañas" aria-label="Secciones">
+    <button type="button" data-ir="exterior"><i>01</i>Exterior</button>
+    <button type="button" data-ir="baja"><i>02</i>Planta baja</button>
+    <button type="button" data-ir="alta"><i>03</i>Planta alta</button>
+  </nav>
+</header>
 
+<!-- ─────────── Exterior: videos ─────────── -->
+<main class="exterior" id="exterior">
   <aside class="panel panel-izq">
-    <p class="marca">DapSam <span>Arquitectos</span></p>
-    <p class="eyebrow">Recorrido interactivo</p>
-    <nav class="lista" id="lista" aria-label="Vistas de la casa"></nav>
-    <div class="botones">
-    <button class="auto" id="auto" type="button">
-      <svg class="play" width="11" height="12" viewBox="0 0 11 12" aria-hidden="true"><path d="M1 1l9 5-9 5z" fill="currentColor"/></svg>
-      <svg class="pausa" width="11" height="12" viewBox="0 0 11 12" aria-hidden="true"><path d="M1.5 1h3v10h-3zM6.5 1h3v10h-3z" fill="currentColor"/></svg>
-      <span class="texto">Recorrido automático</span>
+    <p class="eyebrow">Exterior</p>
+    <nav class="lista" id="lista" aria-label="Vistas del exterior"></nav>
+    <button class="pastilla oro solo-compacto" type="button" data-ir="baja" style="align-self:flex-start">Recorrer por dentro
+      <svg width="13" height="11" viewBox="0 0 14 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 6h12M8.5 1.5L13 6l-4.5 4.5"/></svg>
     </button>
-    <button class="auto plano-btn" id="abrirPlanoPanel" type="button">
-      <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><path d="M1 1h12v12H1zM1 6h6M7 1v8M7 9h6"/></svg>
-      Plano
-    </button>
-    </div>
-    <p class="atajo">← → cambian de vista</p>
   </aside>
 
-  <section class="escena" id="escena" aria-label="Video de la vista">
+  <section class="escena" id="escena" aria-label="Video del exterior">
     <video id="va" muted playsinline preload="auto"></video>
     <video id="vb" muted playsinline preload="auto"></video>
     <div class="velo"></div>
-
-    <div class="cabecera">
-      <p class="marca">DapSam <span>Arquitectos</span></p>
-      <div class="acciones">
-        <button class="pastilla" id="autoMovil" type="button" aria-label="Recorrido automático">
-          <svg class="play" width="10" height="11" viewBox="0 0 11 12" aria-hidden="true"><path d="M1 1l9 5-9 5z" fill="currentColor"/></svg>
-          <svg class="pausa" width="10" height="11" viewBox="0 0 11 12" aria-hidden="true"><path d="M1.5 1h3v10h-3zM6.5 1h3v10h-3z" fill="currentColor"/></svg>
-          Auto
-        </button>
-        <button class="pastilla" id="abrirPlano" type="button">
-          <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><path d="M1 1h12v12H1zM1 6h6M7 1v8M7 9h6"/></svg>
-          Plano
-        </button>
-      </div>
-    </div>
-
     <div class="rotulo">
-      <p class="sub" id="sub"></p>
-      <h1 id="titulo"></h1>
+      <p class="sub" id="extSub"></p>
+      <h1 class="titulo" id="extTitulo"></h1>
       <div class="fila">
-        <div class="momento" id="momento" role="group" aria-label="Hora del día" hidden>
+        <div class="momento esmerilado" id="momento" role="group" aria-label="Hora del día" hidden>
           <button type="button" data-m="tarde" aria-pressed="true">
-            <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="2.6"/><path d="M7 .8v1.6M7 11.6v1.6M.8 7h1.6M11.6 7h1.6M2.6 2.6l1.1 1.1M10.3 10.3l1.1 1.1M2.6 11.4l1.1-1.1M10.3 3.7l1.1-1.1"/></svg>
-            Atardecer
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="2.6"/><path d="M7 .8v1.6M7 11.6v1.6M.8 7h1.6M11.6 7h1.6M2.6 2.6l1.1 1.1M10.3 10.3l1.1 1.1M2.6 11.4l1.1-1.1M10.3 3.7l1.1-1.1"/></svg>Atardecer
           </button>
           <button type="button" data-m="noche" aria-pressed="false">
-            <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" aria-hidden="true"><path d="M12.2 8.6A5.6 5.6 0 0 1 5.4 1.8a5.6 5.6 0 1 0 6.8 6.8z"/></svg>
-            Noche
+            <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" aria-hidden="true"><path d="M12.2 8.6A5.6 5.6 0 0 1 5.4 1.8a5.6 5.6 0 1 0 6.8 6.8z"/></svg>Noche
           </button>
         </div>
-        <button class="repetir icono" id="repetir" type="button" aria-label="Ver de nuevo" title="Ver de nuevo" hidden>
+        <button class="pastilla esmerilado" id="repetir" type="button" aria-label="Ver de nuevo" title="Ver de nuevo" hidden style="width:40px;padding:0;justify-content:center">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 7a5 5 0 1 0 1.6-3.7M2 1.6v2.2h2.2"/></svg>
         </button>
-        <button class="repetir principal" id="seguir" type="button" hidden>
-          Entrar a la casa
+        <button class="pastilla llena" id="entrar" type="button" data-ir="baja">Entrar a la casa
           <svg width="13" height="11" viewBox="0 0 14 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 6h12M8.5 1.5L13 6l-4.5 4.5"/></svg>
         </button>
       </div>
     </div>
-
-    <div class="flechas">
-      <button type="button" id="anterior" aria-label="Vista anterior">
-        <svg width="14" height="12" viewBox="0 0 14 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 6H1M5.5 1.5L1 6l4.5 4.5"/></svg>
-      </button>
-      <button type="button" id="siguiente" aria-label="Vista siguiente">
-        <svg width="14" height="12" viewBox="0 0 14 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 6h12M8.5 1.5L13 6l-4.5 4.5"/></svg>
-      </button>
-    </div>
-
-    <div class="progreso" aria-hidden="true"><i id="barra"></i></div>
-    <nav class="tira" id="tira" aria-label="Vistas de la casa"></nav>
+    <div class="progreso" aria-hidden="true"><i id="barraVideo"></i></div>
+    <nav class="tira" id="tira" aria-label="Vistas del exterior"></nav>
   </section>
 
-  <aside class="panel panel-der" id="panelPlano">
-    <div class="titulo-plano">
-      <p class="eyebrow">Planta baja</p>
-      <button class="cerrar" id="cerrarPlano" type="button" aria-label="Cerrar el plano">
+  <aside class="panel panel-der invita">
+    <p class="eyebrow">Recorrido en 360°</p>
+    <h2>Entra y mira cada espacio a tu alrededor.</h2>
+    <p class="texto">Elige una planta y recorre la casa cuarto por cuarto. En cada uno puedes girar la vista en todas las direcciones.</p>
+    <div class="plantas">
+      <button type="button" data-ir="baja" style="background-image:url('media/maqueta-baja-mini.jpg')"><span><b>Planta baja</b><small id="cuentaBaja"></small></span></button>
+      <button type="button" data-ir="alta" style="background-image:url('media/maqueta-alta-mini.jpg')"><span><b>Planta alta</b><small id="cuentaAlta"></small></span></button>
+    </div>
+  </aside>
+</main>
+
+<!-- ─────────── Recorrido 360 ─────────── -->
+<section class="tour" id="tour" aria-label="Recorrido en 360 grados">
+  <canvas id="lienzo"></canvas>
+  <div class="sombra"></div>
+  <div class="puntos" id="puntos"></div>
+  <div class="maqueta" id="maqueta"><div class="caja" id="maquetaCaja"><img id="maquetaImg" alt="" draggable="false"></div></div>
+
+  <aside class="tarjeta esmerilado" id="tarjeta">
+    <div class="cab">
+      <p class="eyebrow" id="nombrePlanta"></p>
+      <button class="redondo cerrar-plano" id="cerrarPlano" type="button" aria-label="Cerrar el plano" style="width:40px;height:40px;border:1px solid var(--linea)">
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" aria-hidden="true"><path d="M1 1l10 10M11 1L1 11"/></svg>
       </button>
     </div>
-    <div class="plano" id="plano">
-      <img src="media/plano-planta-baja.png" alt="Plano de la planta baja" draggable="false">
-    </div>
-    <p class="nota">Elige un punto del plano para ir a ese espacio.</p>
+    <div class="plano" id="plano"><img id="planoImg" alt="" draggable="false"><svg id="planoSvg" preserveAspectRatio="none"></svg></div>
+    <nav class="cuartos" id="cuartos" aria-label="Espacios de esta planta"></nav>
   </aside>
 
-</main>
+  <div class="pista esmerilado" id="pista">
+    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 8h14M4 5L1 8l3 3M12 5l3 3-3 3"/></svg>
+    Arrastra para mirar alrededor
+  </div>
+
+  <div class="pie">
+    <div>
+      <p class="sub" id="tourSub"></p>
+      <h1 class="titulo" id="tourTitulo"></h1>
+    </div>
+    <div class="acciones">
+      <button class="pastilla esmerilado" id="volverMaqueta" type="button">
+        <svg width="14" height="13" viewBox="0 0 14 13" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" aria-hidden="true"><path d="M7 1l6 3-6 3-6-3zM1 7l6 3 6-3M1 10l6 3 6-3" transform="scale(1,.88)"/></svg>Maqueta
+      </button>
+      <button class="pastilla esmerilado abrir-plano" id="abrirPlano" type="button">
+        <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><path d="M1 1h12v12H1zM1 6h6M7 1v8M7 9h6"/></svg>Plano
+      </button>
+      <button class="pastilla esmerilado" id="verVideo" type="button" hidden>
+        <svg width="10" height="11" viewBox="0 0 11 12" aria-hidden="true"><path d="M1 1l9 5-9 5z" fill="currentColor"/></svg>Ver video
+      </button>
+      <button class="redondo esmerilado flecha" id="anterior" type="button" aria-label="Espacio anterior">
+        <svg width="14" height="12" viewBox="0 0 14 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 6H1M5.5 1.5L1 6l4.5 4.5"/></svg>
+      </button>
+      <button class="redondo esmerilado flecha" id="siguiente" type="button" aria-label="Espacio siguiente">
+        <svg width="14" height="12" viewBox="0 0 14 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 6h12M8.5 1.5L13 6l-4.5 4.5"/></svg>
+      </button>
+    </div>
+  </div>
+  <nav class="chips" id="chips" aria-label="Espacios de esta planta"></nav>
+</section>
+
+<!-- ─────────── Video de un espacio ─────────── -->
+<div class="cine" id="cine" role="dialog" aria-label="Video del espacio">
+  <div class="marco">
+    <video id="cineVideo" muted playsinline loop></video>
+    <button class="redondo esmerilado cerrar" id="cerrarCine" type="button" aria-label="Cerrar el video">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" aria-hidden="true"><path d="M1 1l10 10M11 1L1 11"/></svg>
+    </button>
+    <div class="otros" id="cineOtros"></div>
+  </div>
+</div>
 
 <script>
-/* ───────── Contenido: lo único que hay que tocar para cambiar textos o vistas ─────────
-   archivo  → nombre del video en la carpeta media (sin .mp4)
-   variantes→ misma vista al atardecer y de noche
-   una      → se reproduce una sola vez y se queda en el último cuadro
-   punto    → posición en el plano, en porcentaje [x, y] */
-const VISTAS = [
-  { id:'casa-se-arma', corto:'Inicio',   titulo:'La casa se arma',     sub:'Del lote vacío a la casa terminada', archivo:'casa-se-arma', una:true },
-  { id:'fachada',      corto:'Fachada',  titulo:'Fachada',             sub:'Frente de la casa',                  variantes:{ tarde:'fachada-dia', noche:'fachada-noche' }, punto:[40,93.5] },
-  { id:'entrada',      corto:'Entrada',  titulo:'Entrada',             sub:'Acceso principal',                   archivo:'entrada',       punto:[42,77.5] },
-  { id:'hall',         corto:'Hall',     titulo:'Hall',                sub:'Doble altura',                       archivo:'hall',          punto:[40,62] },
-  { id:'escalera',     corto:'Escalera', titulo:'Escalera y lámparas', sub:'Mármol y baranda de vidrio',         archivo:'escalera',      punto:[53.5,55] },
-  { id:'sala',         corto:'Sala',     titulo:'Sala principal',      sub:'Doble altura, frente a la piscina',  archivo:'sala',          punto:[29,36] },
-  { id:'detalles',     corto:'Detalles', titulo:'Detalles de la sala', sub:'Mural, lámparas y comedor',          archivo:'sala-detalles', punto:[48,36] },
-  { id:'piscina',      corto:'Piscina',  titulo:'Piscina',             sub:'5,30 m de largo',                    archivo:'piscina',       punto:[41,16] },
-  { id:'terraza',      corto:'Terraza',  titulo:'Terraza',             sub:'Comedor exterior y BBQ',             archivo:'terraza',       punto:[69.5,17.5] },
-  { id:'jardin',       corto:'Jardín',   titulo:'Jardín',              sub:'Fachada posterior',                  variantes:{ tarde:'jardin-dia', noche:'jardin-noche' }, punto:[27,23.5] },
+/* ═════════ Contenido: lo único que hay que tocar para cambiar textos, vistas o enlaces ═════════ */
+// Videos del exterior. «variantes» = la misma vista al atardecer y de noche; «una» = se reproduce una sola vez.
+const EXTERIOR = [
+  { id:'casa-se-arma', corto:'Inicio',  titulo:'La casa se arma', sub:'Del lote vacío a la casa terminada', archivo:'casa-se-arma', una:true },
+  { id:'fachada',      corto:'Fachada', titulo:'Fachada',         sub:'Frente de la casa',                  variantes:{ tarde:'fachada-dia', noche:'fachada-noche' } },
+  { id:'entrada',      corto:'Entrada', titulo:'Entrada',         sub:'Acceso principal',                   archivo:'entrada' },
+  { id:'jardin',       corto:'Jardín',  titulo:'Jardín',          sub:'Fachada posterior',                  variantes:{ tarde:'jardin-dia', noche:'jardin-noche' } },
 ];
-/* Orden del recorrido automático: de la tarde a la noche */
-const RUTA = [['casa-se-arma'],['fachada','tarde'],['entrada'],['hall'],['escalera'],['sala'],['detalles'],['piscina'],['terraza'],['jardin','tarde'],['jardin','noche'],['fachada','noche']];
+// Cada planta: su plano y cómo pasar de metros del modelo 3D a píxeles del plano (px = ox + (x − x0)·e ; py = oy − (y − y0)·e).
+const PLANTAS = {
+  baja: { nombre:'Planta baja', plano:'media/plano-planta-baja.png', ancho:820, alto:1229, ox:143, x0:4.99, oy:548, y0:17.44, e:45.7 },
+  alta: { nombre:'Planta alta', plano:'media/plano-planta-alta.png', ancho:815, alto:1229, ox:150, x0:4.99, oy:555, y0:17.58, e:45.6 },
+};
+// Vistas 360. cam = dónde está la cámara (metros del modelo); mira = hacia dónde abre la vista (grados: 0 = fondo de la casa, 90 = derecha del plano);
+// zona = rectángulo del cuarto [x0, x1, y0, y1]; videos = clips de ese espacio.
+const VISTAS = [
+  { id:'hall',              planta:'baja', titulo:'Hall',              sub:'Doble altura',                    cam:[9.2,15.3],    mira:15,   zona:[8.34,10.32,10.65,17.4],  videos:[['hall','Hall'],['escalera','Escalera y lámparas']] },
+  { id:'sala',              planta:'baja', titulo:'Sala principal',    sub:'Doble altura, frente a la piscina', cam:[7.3,20.75], mira:62,   zona:[4.99,9.25,17.44,22.3],   videos:[['sala','Sala'],['sala-detalles','Detalles']] },
+  { id:'comedor',           planta:'baja', titulo:'Comedor',           sub:'Junto a la sala',                 cam:[11.25,18.15], mira:-42,  zona:[9.25,12.16,17.44,22.3] },
+  { id:'cocina',            planta:'baja', titulo:'Cocina',            sub:'Con isla y salida a la terraza',  cam:[14.8,20.0],   mira:-78,  zona:[12.21,16.12,17.48,22.3] },
+  { id:'terraza',           planta:'baja', titulo:'Terraza y piscina', sub:'Comedor exterior y BBQ',          cam:[10.9,23.55],  mira:-38,  zona:[4.99,16.3,22.6,26.9],    videos:[['piscina','Piscina'],['terraza','Terraza']] },
+  { id:'dormitorio-1',      planta:'baja', titulo:'Dormitorio 1',      sub:'Planta baja',                     cam:[7.45,12.05],  mira:-128, zona:[4.99,8.19,9.1,13.36] },
+  { id:'puente',            planta:'alta', titulo:'Puente',            sub:'Vista a la sala y al hall',       cam:[8.35,16.95],  mira:-22,  alza:-14, zona:[6.69,13.54,16.45,17.46] },
+  { id:'dormitorio-master', planta:'alta', titulo:'Dormitorio máster', sub:'Con vista a la piscina',          cam:[10.5,20.35],  mira:92,   zona:[9.47,13.87,17.58,22.49] },
+  { id:'bano-master',       planta:'alta', titulo:'Baño máster',       sub:'Lavamanos doble y ducha',         cam:[14.7,19.7],   mira:58,   zona:[13.99,16.12,17.86,22.43] },
+  { id:'vestidor-master',   planta:'alta', titulo:'Vestidor máster',   sub:'Walk-in closet',                  cam:[14.89,17.05], mira:180,  zona:[13.66,16.12,14.43,17.74] },
+  { id:'sala-tv',           planta:'alta', titulo:'Sala de TV',        sub:'Estar de la planta alta',         cam:[14.4,13.52],  mira:155,  zona:[12.54,16.12,12.22,14.31] },
+  { id:'dormitorio-2',      planta:'alta', titulo:'Dormitorio 2',      sub:'Al frente de la casa',            cam:[7.55,11.9],   mira:-122, zona:[4.99,8.19,9.1,12.53] },
+  { id:'dormitorio-3',      planta:'alta', titulo:'Dormitorio 3',      sub:'Con baño y vestidor',             cam:[13.0,11.65],  mira:-112, zona:[10.47,13.68,8.17,12.07] },
+];
+// Flechas dentro de cada vista: a qué otros espacios se puede pasar desde ahí.
+const ENLACES = {
+  'hall':['sala','comedor','dormitorio-1','puente'], 'sala':['hall','comedor','terraza'], 'comedor':['sala','cocina','hall'], 'cocina':['comedor','terraza'],
+  'terraza':['sala','cocina'], 'dormitorio-1':['hall'],
+  'puente':['dormitorio-master','sala-tv','dormitorio-2','dormitorio-3','hall'], 'dormitorio-master':['bano-master','vestidor-master','puente'],
+  'bano-master':['dormitorio-master','vestidor-master'], 'vestidor-master':['dormitorio-master','bano-master'],
+  'sala-tv':['puente','dormitorio-3'], 'dormitorio-2':['puente'], 'dormitorio-3':['puente','sala-tv'],
+};
+// Dónde cae cada espacio dentro de la imagen de la maqueta, en porcentaje [x, y] (sale de Vistas 360/maqueta/maqueta.json).
+const MAQUETA = {
+  baja: { 'hall':[47.23,55.18], 'sala':[28.67,38.97], 'comedor':[52.12,42.95], 'cocina':[65.93,32.28], 'terraza':[41.07,24.99], 'dormitorio-1':[44.47,68.4] },
+  alta: { 'puente':[40.29,50.61], 'dormitorio-master':[44.7,36.39], 'bano-master':[65.97,33.42], 'vestidor-master':[71.48,42.21], 'sala-tv':[75.25,54.84], 'dormitorio-2':[45.21,68.78], 'dormitorio-3':[71.78,62.93] },
+};
+const VERSION = '2';   // se cambia al actualizar las imágenes 360 para que el navegador no use las viejas
 
+/* ═════════ Utilidades ═════════ */
 const $ = s => document.querySelector(s);
-const capas = [$('#va'), $('#vb')];
-const fondos = document.querySelectorAll('.fondo i');
-let frente = 0, fondoFrente = 0, pedido = 0, limpiar = 0;
-let actual = -1, momento = 'tarde', auto = false;
+const vista = id => VISTAS.find(v => v.id === id);
+const deLaPlanta = p => VISTAS.filter(v => v.planta === p);
+const rad = g => g * Math.PI / 180;
+let modo = 'exterior', planta = 'baja', actual360 = null;
 
+/* ═════════ Exterior: videos con fundido ═════════ */
+const capas = [$('#va'), $('#vb')], fondos = document.querySelectorAll('.fondo i');
+let frente = 0, fondoFrente = 0, pedido = 0, limpiar = 0, ext = -1, momento = 'tarde';
 const archivoDe = v => v.variantes ? v.variantes[momento] : v.archivo;
-const indiceDe = id => VISTAS.findIndex(v => v.id === id);
 
-/* ───────── Construir menú, tira y puntos del plano ───────── */
-VISTAS.forEach((v, i) => {
+EXTERIOR.forEach((v, i) => {
   const b = document.createElement('button');
   b.type = 'button';
   b.innerHTML = `<span class="n">${String(i + 1).padStart(2, '0')}</span><span class="t">${v.titulo}</span>`;
-  b.addEventListener('click', () => ir(i, { manual:true }));
-  b.addEventListener('pointerenter', () => precargar(archivoDe(v)));
+  b.onclick = () => irExterior(i);
   $('#lista').appendChild(b);
-
   const t = document.createElement('button');
-  t.type = 'button';
-  t.setAttribute('aria-label', v.titulo);
+  t.type = 'button'; t.setAttribute('aria-label', v.titulo);
   t.innerHTML = `<span>${v.corto}</span>`;
-  t.addEventListener('click', () => ir(i, { manual:true }));
+  t.onclick = () => irExterior(i);
   $('#tira').appendChild(t);
-
-  if (v.punto) {
-    const p = document.createElement('button');
-    p.type = 'button';
-    p.className = 'punto';
-    p.dataset.i = i;
-    p.style.left = v.punto[0] + '%';
-    p.style.top = v.punto[1] + '%';
-    p.setAttribute('aria-label', v.titulo);
-    p.innerHTML = `<b>${v.corto}</b>`;
-    p.addEventListener('click', () => { ir(i, { manual:true }); document.body.classList.remove('plano-abierto'); });
-    p.addEventListener('pointerenter', () => precargar(archivoDe(v)));
-    $('#plano').appendChild(p);
-  }
 });
-const botonesLista = [...$('#lista').children];
-const botonesTira = [...$('#tira').children];
-const puntos = [...document.querySelectorAll('.punto')];
+const btLista = [...$('#lista').children], btTira = [...$('#tira').children];
 
-function pintarMinis() {
-  VISTAS.forEach((v, i) => { botonesTira[i].style.backgroundImage = `url("media/${archivoDe(v)}-mini.jpg")`; });
-}
-
-/* ───────── Video: dos capas que se funden ───────── */
-const precargados = {};
-function precargar(archivo) {
-  if (precargados[archivo]) return;
-  const v = document.createElement('video');
-  v.muted = true; v.preload = 'auto'; v.src = `media/${archivo}.mp4`;
-  precargados[archivo] = v;
-}
-
-function repetirEnBucle() { return !auto && !VISTAS[actual].una; }
-
-function mostrar(archivo, ms) {
-  const mio = ++pedido;
-  const poster = `media/${archivo}.jpg`;
-
-  if (actual >= 0 && !capas[frente].currentSrc && !capas[1 - frente].currentSrc) {
-    // primera carga: sin fundido
+function mostrarVideo(archivo, ms) {
+  const mio = ++pedido, poster = `media/${archivo}.jpg`;
+  if (!capas[0].currentSrc && !capas[1].currentSrc) {
     const v = capas[frente];
-    v.poster = poster; v.src = `media/${archivo}.mp4`; v.loop = repetirEnBucle();
+    v.poster = poster; v.src = `media/${archivo}.mp4`; v.loop = !EXTERIOR[ext].una;
     v.classList.add('visible');
-    v.play().catch(() => {});
+    if (modo === 'exterior') v.play().catch(() => {});
   } else {
     const entra = capas[1 - frente], sale = capas[frente];
-    entra.style.transitionDuration = '0ms';
-    entra.classList.remove('visible');
-    void entra.offsetWidth;
-    entra.poster = poster;
-    entra.src = `media/${archivo}.mp4`;
-    entra.loop = repetirEnBucle();
-    entra.load();
+    entra.style.transitionDuration = '0ms'; entra.classList.remove('visible'); void entra.offsetWidth;
+    entra.poster = poster; entra.src = `media/${archivo}.mp4`; entra.loop = !EXTERIOR[ext].una; entra.load();
     const listo = () => {
       if (mio !== pedido) return;
-      entra.play().catch(() => {});
+      if (modo === 'exterior') entra.play().catch(() => {});
       entra.style.transitionDuration = ms + 'ms';
       entra.style.zIndex = 2; sale.style.zIndex = 1;
       entra.classList.add('visible');
       frente = 1 - frente;
       clearTimeout(limpiar);
-      limpiar = setTimeout(() => {
-        if (mio !== pedido) return;
-        sale.style.transitionDuration = '0ms';
-        sale.classList.remove('visible');
-        sale.pause();
-      }, ms + 80);
+      limpiar = setTimeout(() => { if (mio !== pedido) return; sale.style.transitionDuration = '0ms'; sale.classList.remove('visible'); sale.pause(); }, ms + 80);
     };
-    if (entra.readyState >= 2) listo();
-    else entra.addEventListener('loadeddata', listo, { once:true });
+    if (entra.readyState >= 2) listo(); else entra.addEventListener('loadeddata', listo, { once:true });
   }
-
   const f = fondos[1 - fondoFrente];
-  f.style.backgroundImage = `url("${poster}")`;
-  f.classList.add('visible');
-  fondos[fondoFrente].classList.remove('visible');
-  fondoFrente = 1 - fondoFrente;
+  f.style.backgroundImage = `url("${poster}")`; f.classList.add('visible');
+  fondos[fondoFrente].classList.remove('visible'); fondoFrente = 1 - fondoFrente;
 }
-
-/* ───────── Cambiar de vista ───────── */
-function ir(i, opciones = {}) {
-  i = (i + VISTAS.length) % VISTAS.length;
-  if (opciones.manual && auto) ponerAuto(false);
-  if (opciones.momento) momento = opciones.momento;
-  const mismaVista = i === actual;
-  if (mismaVista && !opciones.momento && !opciones.forzar) return;
-  actual = i;
-  const v = VISTAS[i];
-
-  if (!mismaVista) {
-    const sub = $('#sub'), tit = $('#titulo');
-    sub.textContent = v.sub; tit.textContent = v.titulo;
-    [sub, tit].forEach(e => { e.classList.remove('cambia'); void e.offsetWidth; e.classList.add('cambia'); });
+function irExterior(i, nuevoMomento) {
+  i = (i + EXTERIOR.length) % EXTERIOR.length;
+  if (nuevoMomento) momento = nuevoMomento;
+  const misma = i === ext;
+  if (misma && !nuevoMomento) return;
+  ext = i;
+  const v = EXTERIOR[i];
+  if (!misma) {
+    $('#extSub').textContent = v.sub; $('#extTitulo').textContent = v.titulo;
+    [$('#extSub'), $('#extTitulo')].forEach(e => { e.classList.remove('cambia'); void e.offsetWidth; e.classList.add('cambia'); });
   }
-  botonesLista.forEach((b, k) => b.setAttribute('aria-current', k === i));
-  botonesTira.forEach((b, k) => b.setAttribute('aria-current', k === i));
-  // «La casa se arma» ocurre frente a la casa: comparte punto con la fachada
-  const iPunto = v.punto ? i : indiceDe('fachada');
-  puntos.forEach(p => p.setAttribute('aria-current', +p.dataset.i === iPunto));
-  botonesTira[i].scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
-
+  btLista.forEach((b, k) => b.setAttribute('aria-current', k === i));
+  btTira.forEach((b, k) => { b.setAttribute('aria-current', k === i); b.style.backgroundImage = `url("media/${archivoDe(EXTERIOR[k])}-mini.jpg")`; });
+  btTira[i].scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
   $('#momento').hidden = !v.variantes;
   document.querySelectorAll('#momento button').forEach(b => b.setAttribute('aria-pressed', b.dataset.m === momento));
-  $('#repetir').hidden = true; $('#seguir').hidden = true;
-  pintarMinis();
-
-  mostrar(archivoDe(v), mismaVista ? 1500 : 650);
-
-  const sig = VISTAS[(i + 1) % VISTAS.length];
-  precargar(archivoDe(sig));
-  if (v.variantes) precargar(v.variantes[momento === 'tarde' ? 'noche' : 'tarde']);
-  try { history.replaceState(null, '', '#' + v.id); } catch (e) {}
+  $('#repetir').hidden = true;
+  mostrarVideo(archivoDe(v), misma ? 1500 : 650);
+  if (modo === 'exterior') ponerHash(v.id);
 }
-
-/* ───────── Recorrido automático ───────── */
-function ponerAuto(si) {
-  auto = si;
-  $('#auto').classList.toggle('activo', si);
-  $('#autoMovil').classList.toggle('activo', si);
-  $('#auto .texto').textContent = si ? 'Detener recorrido' : 'Recorrido automático';
-  if (actual >= 0) capas[frente].loop = repetirEnBucle();
-}
-function pasoDeRuta() {
-  const id = VISTAS[actual].id;
-  let k = RUTA.findIndex(r => r[0] === id && (!r[1] || r[1] === momento));
-  if (k < 0) k = RUTA.findIndex(r => r[0] === id);
-  return k;
-}
-function avanzarRuta() {
-  const k = pasoDeRuta() + 1;
-  if (k >= RUTA.length) { ponerAuto(false); capas[frente].play().catch(() => {}); return; }
-  const [id, m] = RUTA[k];
-  ir(indiceDe(id), { momento:m, forzar:true });
-}
-function alternarAuto() {
-  if (auto) { ponerAuto(false); return; }
-  ponerAuto(true);
-  $('#repetir').hidden = true; $('#seguir').hidden = true;
-  const v = capas[frente];
-  if (v.ended) avanzarRuta();
-  else if (pasoDeRuta() === RUTA.length - 1) { momento = 'tarde'; ir(0, { forzar:true }); }
-}
-capas.forEach(v => v.addEventListener('ended', () => {
-  if (v !== capas[frente]) return;
-  if (auto) avanzarRuta();
-  else if (VISTAS[actual].una) { $('#repetir').hidden = false; $('#seguir').hidden = false; }
-}));
-
-/* ───────── Controles ───────── */
-$('#auto').addEventListener('click', alternarAuto);
-$('#autoMovil').addEventListener('click', alternarAuto);
-$('#anterior').addEventListener('click', () => ir(actual - 1, { manual:true }));
-$('#siguiente').addEventListener('click', () => ir(actual + 1, { manual:true }));
-$('#repetir').addEventListener('click', () => {
-  $('#repetir').hidden = true; $('#seguir').hidden = true;
-  const v = capas[frente]; v.currentTime = 0; v.play().catch(() => {});
-});
-$('#seguir').addEventListener('click', () => ir(actual + 1, { manual:true }));
-document.querySelectorAll('#momento button').forEach(b => b.addEventListener('click', () => {
-  if (b.dataset.m === momento) return;
-  if (auto) ponerAuto(false);
-  ir(actual, { momento:b.dataset.m });
-}));
-$('#abrirPlano').addEventListener('click', () => document.body.classList.add('plano-abierto'));
-$('#abrirPlanoPanel').addEventListener('click', () => document.body.classList.add('plano-abierto'));
-$('#cerrarPlano').addEventListener('click', () => document.body.classList.remove('plano-abierto'));
-$('#panelPlano').addEventListener('click', e => { if (e.target === e.currentTarget) document.body.classList.remove('plano-abierto'); });
-
-document.addEventListener('keydown', e => {
-  if (e.metaKey || e.ctrlKey || e.altKey) return;
-  if (e.key === 'ArrowRight') ir(actual + 1, { manual:true });
-  else if (e.key === 'ArrowLeft') ir(actual - 1, { manual:true });
-  else if (e.key === 'Escape') document.body.classList.remove('plano-abierto');
-  else if (e.key === ' ' && document.activeElement.tagName !== 'BUTTON') { e.preventDefault(); alternarAuto(); }
-});
-
-// deslizar en el teléfono
-let x0 = null, y0 = 0;
-$('#escena').addEventListener('touchstart', e => {
-  if (e.target.closest('.tira, button')) { x0 = null; return; }
-  x0 = e.touches[0].clientX; y0 = e.touches[0].clientY;
-}, { passive:true });
-$('#escena').addEventListener('touchend', e => {
-  if (x0 === null) return;
-  const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
-  x0 = null;
-  if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.4) ir(actual + (dx < 0 ? 1 : -1), { manual:true });
-}, { passive:true });
-
-// barra de avance del video
+capas.forEach(v => v.addEventListener('ended', () => { if (v === capas[frente] && EXTERIOR[ext].una) $('#repetir').hidden = false; }));
+$('#repetir').onclick = () => { $('#repetir').hidden = true; const v = capas[frente]; v.currentTime = 0; v.play().catch(() => {}); };
+document.querySelectorAll('#momento button').forEach(b => b.onclick = () => { if (b.dataset.m !== momento) irExterior(ext, b.dataset.m); });
 (function tic() {
-  const v = capas[frente];
-  const p = v.duration ? Math.min(1, v.currentTime / v.duration) : 0;
-  $('#barra').style.transform = `scaleX(${p})`;
+  if (modo === 'exterior') { const v = capas[frente]; $('#barraVideo').style.transform = `scaleX(${v.duration ? Math.min(1, v.currentTime / v.duration) : 0})`; }
   requestAnimationFrame(tic);
 })();
 
-// si el teléfono bloquea el arranque automático (modo de ahorro), el primer toque lo inicia
-document.addEventListener('pointerdown', () => {
-  const v = capas[frente];
-  if (actual >= 0 && v.paused && !v.ended) v.play().catch(() => {});
+/* ═════════ Visor 360 (WebGL, sin librerías) ═════════ */
+const lienzo = $('#lienzo');
+const gl = lienzo.getContext('webgl', { antialias:false });
+let giro = 0, alza = 0, campo = rad(82), velGiro = 0, velAlza = 0, arrastra = false, tocado = false, textura = null, pedido360 = 0;
+if (gl) {
+  const vs = 'attribute vec2 p;varying vec2 v;void main(){v=p;gl_Position=vec4(p,0.,1.);}';
+  const fs = `precision highp float;varying vec2 v;uniform sampler2D t;uniform float giro,alza,tanf,aspecto;
+  void main(){vec3 d=normalize(vec3(v.x*tanf*aspecto,v.y*tanf,-1.));
+    float ca=cos(alza),sa=sin(alza);d=vec3(d.x,d.y*ca-d.z*sa,d.y*sa+d.z*ca);
+    float cg=cos(giro),sg=sin(giro);d=vec3(d.x*cg-d.z*sg,d.y,d.x*sg+d.z*cg);
+    gl_FragColor=texture2D(t,vec2(atan(d.x,-d.z)/6.28318530718+.5,.5-asin(clamp(d.y,-1.,1.))/3.14159265359));}`;
+  const sh = (tipo, src) => { const s = gl.createShader(tipo); gl.shaderSource(s, src); gl.compileShader(s); return s; };
+  const prog = gl.createProgram();
+  gl.attachShader(prog, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(prog); gl.useProgram(prog);
+  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+  const loc = gl.getAttribLocation(prog, 'p');
+  gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+  gl.U = n => gl.getUniformLocation(prog, n);
+}
+function cargar360(id, alTerminar) {
+  const mio = ++pedido360, img = new Image();
+  lienzo.classList.add('cargando');
+  img.onload = () => {
+    if (mio !== pedido360 || !gl) return;
+    const max = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+    let fuente = img;
+    if (img.width > max) { const c = document.createElement('canvas'); c.width = max; c.height = max / 2; c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); fuente = c; }
+    if (textura) gl.deleteTexture(textura);
+    textura = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, textura);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, fuente);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    const pot = (fuente.width & (fuente.width - 1)) === 0;
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, pot ? gl.REPEAT : gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    alTerminar();
+    lienzo.classList.remove('cargando');
+  };
+  img.src = `media/360/${id}.jpg?v=${VERSION}`;
+}
+function pintar360() {
+  requestAnimationFrame(pintar360);
+  if (modo !== 'tour' || !gl) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = Math.round(lienzo.clientWidth * dpr), h = Math.round(lienzo.clientHeight * dpr);
+  if (lienzo.width !== w || lienzo.height !== h) { lienzo.width = w; lienzo.height = h; }
+  gl.viewport(0, 0, w, h);
+  if (!arrastra) { giro += velGiro; alza += velAlza; velGiro *= .93; velAlza *= .93; if (!tocado) giro += .0005; }
+  alza = Math.max(-1.45, Math.min(1.45, alza));
+  if (textura) {
+    gl.uniform1f(gl.U('giro'), giro); gl.uniform1f(gl.U('alza'), alza);
+    gl.uniform1f(gl.U('tanf'), Math.tan(campo / 2)); gl.uniform1f(gl.U('aspecto'), w / h);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  }
+  colocarEnlaces();
+  dibujarMira();
+}
+pintar360();
+let px = 0, py = 0, dedos = new Map(), separacion = 0;
+lienzo.addEventListener('pointerdown', e => {
+  dedos.set(e.pointerId, [e.clientX, e.clientY]);
+  arrastra = true; tocado = true; px = e.clientX; py = e.clientY; velGiro = velAlza = 0;
+  lienzo.classList.add('arrastrando'); lienzo.setPointerCapture(e.pointerId); $('#pista').classList.add('fuera');
 });
+lienzo.addEventListener('pointermove', e => {
+  if (!dedos.has(e.pointerId)) return;
+  dedos.set(e.pointerId, [e.clientX, e.clientY]);
+  if (dedos.size === 2) {          // pellizco: acercar o alejar
+    const [a, b] = [...dedos.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]);
+    if (separacion) campo = Math.max(rad(40), Math.min(rad(100), campo * separacion / d));
+    separacion = d; return;
+  }
+  const k = campo / lienzo.clientHeight, dg = -(e.clientX - px) * k, da = (e.clientY - py) * k;
+  giro += dg; alza += da; px = e.clientX; py = e.clientY;
+  velGiro = Math.max(-.03, Math.min(.03, dg)); velAlza = Math.max(-.03, Math.min(.03, da));
+});
+const soltar = e => { dedos.delete(e.pointerId); separacion = 0; if (!dedos.size) { arrastra = false; lienzo.classList.remove('arrastrando'); } else { const r = [...dedos.values()][0]; px = r[0]; py = r[1]; } };
+lienzo.addEventListener('pointerup', soltar); lienzo.addEventListener('pointercancel', soltar);
+lienzo.addEventListener('wheel', e => { e.preventDefault(); campo = Math.max(rad(40), Math.min(rad(100), campo + e.deltaY * .0012)); }, { passive:false });
 
-// al volver a la pestaña, el video sigue
-document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && actual >= 0 && !capas[frente].ended) capas[frente].play().catch(() => {});
-});
+/* Flechas hacia otros espacios, proyectadas sobre la vista */
+let enlaces = [];
+function armarEnlaces(v) {
+  $('#puntos').innerHTML = ''; enlaces = [];
+  (ENLACES[v.id] || []).forEach(id => {
+    const d = vista(id); if (!d) return;
+    const otraPlanta = d.planta !== v.planta;
+    const lon = Math.atan2(d.cam[0] - v.cam[0], d.cam[1] - v.cam[1]);
+    const lat = rad(otraPlanta ? (d.planta === 'alta' ? 24 : -30) : -10);
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'ir esmerilado';
+    b.textContent = otraPlanta ? (d.planta === 'alta' ? 'Subir a planta alta' : 'Bajar al hall') : d.titulo;
+    b.onclick = () => irVista(id);
+    $('#puntos').appendChild(b);
+    enlaces.push({ b, x:Math.sin(lon) * Math.cos(lat), y:Math.sin(lat), z:-Math.cos(lon) * Math.cos(lat) });
+  });
+}
+function colocarEnlaces() {
+  const W = lienzo.clientWidth, H = lienzo.clientHeight, tf = Math.tan(campo / 2), cg = Math.cos(giro), sg = Math.sin(giro), ca = Math.cos(alza), sa = Math.sin(alza);
+  for (const e of enlaces) {
+    const x1 = e.x * cg + e.z * sg, z1 = -e.x * sg + e.z * cg, y1 = e.y;
+    const y0 = y1 * ca + z1 * sa, z0 = -y1 * sa + z1 * ca;
+    if (z0 > -0.15) { e.b.classList.add('oculto'); continue; }
+    const nx = (x1 / -z0) / (tf * W / H), ny = (y0 / -z0) / tf;
+    const fuera = Math.abs(nx) > 1.05 || Math.abs(ny) > 1.05;
+    e.b.classList.toggle('oculto', fuera);
+    if (!fuera) e.b.style.transform = `translate(${((nx + 1) / 2 * W).toFixed(1)}px,${((1 - ny) / 2 * H).toFixed(1)}px) translate(-50%,-50%)`;
+  }
+}
 
-/* ───────── Arranque ───────── */
-window.addEventListener('hashchange', () => {
-  const k = indiceDe(location.hash.slice(1));
-  if (k >= 0 && k !== actual) ir(k, { manual:true });
+/* ═════════ Plano con zonas ═════════ */
+const NS = 'http://www.w3.org/2000/svg';
+let conoMira = null;
+function aPlano(p, x, y) { return [p.ox + (x - p.x0) * p.e, p.oy - (y - p.y0) * p.e]; }
+function armarPlanta(nombre) {
+  planta = nombre;
+  const p = PLANTAS[nombre], svg = $('#planoSvg');
+  $('#nombrePlanta').textContent = p.nombre;
+  $('#planoImg').src = p.plano; $('#planoImg').alt = 'Plano de la ' + p.nombre.toLowerCase();
+  svg.setAttribute('viewBox', `0 0 ${p.ancho} ${p.alto}`); svg.innerHTML = '';
+  $('#cuartos').innerHTML = ''; $('#chips').innerHTML = '';
+  conoMira = document.createElementNS(NS, 'path'); conoMira.setAttribute('class', 'mira'); svg.appendChild(conoMira);
+  deLaPlanta(nombre).forEach((v, i) => {
+    const [ax, ay] = aPlano(p, v.zona[0], v.zona[3]), [bx, by] = aPlano(p, v.zona[1], v.zona[2]);
+    const r = document.createElementNS(NS, 'rect');
+    r.setAttribute('x', ax); r.setAttribute('y', ay); r.setAttribute('width', bx - ax); r.setAttribute('height', by - ay); r.setAttribute('rx', 6);
+    r.setAttribute('class', 'zona'); r.dataset.id = v.id;
+    const t = document.createElementNS(NS, 'title'); t.textContent = v.titulo; r.appendChild(t);
+    r.addEventListener('click', () => { irVista(v.id); document.body.classList.remove('plano-abierto'); });
+    svg.appendChild(r);
+    const [cx, cy] = aPlano(p, v.cam[0], v.cam[1]);
+    const c = document.createElementNS(NS, 'circle');
+    c.setAttribute('cx', cx); c.setAttribute('cy', cy); c.setAttribute('r', 9); c.setAttribute('class', 'camara'); c.dataset.id = v.id;
+    svg.appendChild(c);
+    const b = document.createElement('button');
+    b.type = 'button'; b.dataset.id = v.id;
+    b.innerHTML = `<span class="n">${String(i + 1).padStart(2, '0')}</span><span class="t">${v.titulo}</span>`;
+    b.onclick = () => { irVista(v.id); document.body.classList.remove('plano-abierto'); };
+    $('#cuartos').appendChild(b);
+    const ch = document.createElement('button');
+    ch.type = 'button'; ch.className = 'esmerilado'; ch.dataset.id = v.id; ch.textContent = v.titulo;
+    ch.onclick = () => irVista(v.id);
+    $('#chips').appendChild(ch);
+  });
+}
+function dibujarMira() {       // abanico en el plano que muestra hacia dónde se está mirando
+  if (!conoMira || !actual360) return;
+  const p = PLANTAS[actual360.planta], [cx, cy] = aPlano(p, actual360.cam[0], actual360.cam[1]);
+  const medio = campo * (lienzo.clientWidth / Math.max(1, lienzo.clientHeight)) / 2, a0 = giro - Math.min(medio, 1.1), a1 = giro + Math.min(medio, 1.1), R = 62;
+  conoMira.setAttribute('d', `M${cx} ${cy} L${cx + Math.sin(a0) * R} ${cy - Math.cos(a0) * R} A${R} ${R} 0 0 1 ${cx + Math.sin(a1) * R} ${cy - Math.cos(a1) * R} Z`);
+}
+function marcar(id) {
+  document.querySelectorAll('#planoSvg [data-id], #cuartos [data-id], #chips [data-id]').forEach(e => e.setAttribute('aria-current', e.dataset.id === id));
+  const ch = document.querySelector(`#chips [data-id="${id}"]`);
+  if (ch) ch.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
+}
+function irVista(id, sinHash) {
+  const v = vista(id); if (!v) return;
+  document.body.dataset.tour = 'vista';
+  if (v.planta !== planta || !$('#planoSvg').children.length) armarPlanta(v.planta);
+  const primera = actual360 === null;
+  actual360 = v; marcar(id);
+  $('#tourSub').textContent = v.sub; $('#tourTitulo').textContent = v.titulo;
+  [$('#tourSub'), $('#tourTitulo')].forEach(e => { e.classList.remove('cambia'); void e.offsetWidth; e.classList.add('cambia'); });
+  $('#verVideo').hidden = !v.videos;
+  $('#puntos').innerHTML = ''; enlaces = [];
+  cargar360(id, () => { giro = rad(v.mira); alza = rad(v.alza || 0); velGiro = velAlza = 0; campo = rad(82); tocado = !primera && tocado; armarEnlaces(v); });
+  document.querySelectorAll('#pestañas button').forEach(b => b.setAttribute('aria-current', b.dataset.ir === v.planta));
+  if (!sinHash) ponerHash(id);
+  const lista = deLaPlanta(v.planta), sig = lista[(lista.indexOf(v) + 1) % lista.length];
+  new Image().src = `media/360/${sig.id}.jpg?v=${VERSION}`;      // deja lista la siguiente
+}
+function verMaqueta(nombre) {          // entrada a una planta: la maqueta con un punto por espacio
+  const p = PLANTAS[nombre], caja = $('#maquetaCaja');
+  if (planta !== nombre || !$('#planoSvg').children.length) armarPlanta(nombre);
+  document.body.dataset.tour = 'maqueta';
+  document.body.classList.remove('plano-abierto');
+  caja.classList.remove('acercando');
+  $('#maquetaImg').src = `media/maqueta-${nombre}.jpg?v=${VERSION}`;
+  $('#maquetaImg').alt = 'Maqueta de la ' + p.nombre.toLowerCase();
+  caja.querySelectorAll('.ir').forEach(b => b.remove());
+  deLaPlanta(nombre).forEach((v, k) => {
+    const [x, y] = MAQUETA[nombre][v.id];
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'ir esmerilado'; b.textContent = v.titulo;
+    b.style.left = x + '%'; b.style.top = y + '%'; b.style.animationDelay = (0.25 + k * 0.06) + 's';
+    b.addEventListener('pointerenter', () => { new Image().src = `media/360/${v.id}.jpg?v=${VERSION}`; });
+    b.onclick = () => {
+      caja.style.transformOrigin = `${x}% ${y}%`; caja.classList.add('acercando');
+      setTimeout(() => irVista(v.id), 480);
+    };
+    caja.appendChild(b);
+  });
+  $('#tourSub').textContent = 'Elige un espacio'; $('#tourTitulo').textContent = p.nombre;
+  [$('#tourSub'), $('#tourTitulo')].forEach(e => { e.classList.remove('cambia'); void e.offsetWidth; e.classList.add('cambia'); });
+  document.querySelectorAll('#pestañas button').forEach(b => b.setAttribute('aria-current', b.dataset.ir === nombre));
+  ponerHash(nombre);
+}
+function pasoVista(d) {
+  if (document.body.dataset.tour === 'maqueta') return;
+  const lista = deLaPlanta(planta), i = lista.indexOf(actual360);
+  irVista(lista[(i + d + lista.length) % lista.length].id);
+}
+$('#anterior').onclick = () => pasoVista(-1);
+$('#siguiente').onclick = () => pasoVista(1);
+$('#volverMaqueta').onclick = () => verMaqueta(planta);
+$('#abrirPlano').onclick = () => document.body.classList.add('plano-abierto');
+$('#cerrarPlano').onclick = () => document.body.classList.remove('plano-abierto');
+
+/* ═════════ Video de un espacio ═════════ */
+function abrirCine() {
+  const v = actual360; if (!v || !v.videos) return;
+  const otros = $('#cineOtros'); otros.innerHTML = '';
+  const poner = k => {
+    $('#cineVideo').src = `media/${v.videos[k][0]}.mp4`; $('#cineVideo').play().catch(() => {});
+    [...otros.children].forEach((b, j) => b.setAttribute('aria-pressed', j === k));
+  };
+  if (v.videos.length > 1) v.videos.forEach((par, k) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'pastilla esmerilado'; b.textContent = par[1]; b.onclick = () => poner(k);
+    otros.appendChild(b);
+  });
+  poner(0);
+  document.body.classList.add('cine-abierto');
+}
+function cerrarCine() { document.body.classList.remove('cine-abierto'); $('#cineVideo').pause(); }
+$('#verVideo').onclick = abrirCine;
+$('#cerrarCine').onclick = cerrarCine;
+$('#cine').addEventListener('click', e => { if (e.target === e.currentTarget) cerrarCine(); });
+
+/* ═════════ Cambiar de sección ═════════ */
+function ponerHash(h) { try { history.replaceState(null, '', '#' + h); } catch (e) {} }
+function ponerModo(m) {
+  modo = m; document.body.dataset.modo = m;
+  if (m === 'exterior') {
+    document.querySelectorAll('#pestañas button').forEach(b => b.setAttribute('aria-current', b.dataset.ir === 'exterior'));
+    const v = capas[frente]; if (v.currentSrc && !v.ended) v.play().catch(() => {});
+    if (ext >= 0) ponerHash(EXTERIOR[ext].id);
+  } else capas.forEach(v => v.pause());
+  document.body.classList.remove('plano-abierto');
+}
+function ir(destino) {                 // 'exterior', 'baja', 'alta' o el id de una vista
+  if (destino === 'exterior') { ponerModo('exterior'); return; }
+  const e = EXTERIOR.findIndex(v => v.id === destino);
+  if (e >= 0) { ponerModo('exterior'); irExterior(e); return; }
+  ponerModo('tour');
+  if (PLANTAS[destino]) verMaqueta(destino); else irVista(destino);
+}
+document.querySelectorAll('[data-ir]').forEach(b => b.addEventListener('click', () => ir(b.dataset.ir)));
+document.addEventListener('keydown', e => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.key === 'Escape') { cerrarCine(); document.body.classList.remove('plano-abierto'); }
+  else if (e.key === 'ArrowRight') modo === 'tour' ? pasoVista(1) : irExterior(ext + 1);
+  else if (e.key === 'ArrowLeft') modo === 'tour' ? pasoVista(-1) : irExterior(ext - 1);
 });
-const inicial = indiceDe(location.hash.slice(1));
-ir(inicial >= 0 ? inicial : 0, { forzar:true });
+let x0 = null, y0 = 0;
+$('#escena').addEventListener('touchstart', e => { if (e.target.closest('.tira, button')) { x0 = null; return; } x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive:true });
+$('#escena').addEventListener('touchend', e => {
+  if (x0 === null) return;
+  const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; x0 = null;
+  if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.4) irExterior(ext + (dx < 0 ? 1 : -1));
+}, { passive:true });
+document.addEventListener('pointerdown', () => { const v = capas[frente]; if (modo === 'exterior' && v.currentSrc && v.paused && !v.ended) v.play().catch(() => {}); });
+document.addEventListener('visibilitychange', () => { const v = capas[frente]; if (!document.hidden && modo === 'exterior' && v.currentSrc && !v.ended) v.play().catch(() => {}); });
+window.addEventListener('hashchange', () => { const h = location.hash.slice(1), aqui = modo !== 'tour' ? EXTERIOR[ext].id : (document.body.dataset.tour === 'maqueta' ? planta : actual360 && actual360.id); if (h && h !== aqui) ir(h); });
+
+/* ═════════ Arranque ═════════ */
+if (new URLSearchParams(location.search).has('zonas')) document.body.classList.add('ver-zonas');   // ayuda para ajustar las zonas del plano
+$('#cuentaBaja').textContent = deLaPlanta('baja').length + ' espacios';
+$('#cuentaAlta').textContent = deLaPlanta('alta').length + ' espacios';
+const inicial = location.hash.slice(1);      // se lee antes de arrancar: el exterior escribe su propio enlace
+irExterior(0);
+if (inicial && (vista(inicial) || PLANTAS[inicial] || EXTERIOR.some(v => v.id === inicial))) ir(inicial); else ponerModo('exterior');
+window.estado = () => ({ modo, tour: document.body.dataset.tour, planta, vista: actual360 && actual360.id, exterior: EXTERIOR[ext].id, giro: +(giro * 180 / Math.PI).toFixed(1), textura: !!textura, enlaces: enlaces.length });
 </script>
 </body>
 </html>
