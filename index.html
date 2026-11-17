@@ -47,7 +47,7 @@ svg{display:block}
 .barra{position:fixed;z-index:30;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:calc(env(safe-area-inset-top,0px) + 20px) clamp(18px,3vw,40px) 0;pointer-events:none}
 .barra > *{pointer-events:auto}
 .pestañas{display:flex;gap:4px;padding:4px;border-radius:999px}
-.pestañas button{display:flex;align-items:baseline;gap:8px;height:36px;padding:0 16px;border-radius:999px;font-size:10.5px;font-weight:400;letter-spacing:.2em;text-transform:uppercase;color:var(--tenue);white-space:nowrap;transition:background .35s,color .35s}
+.pestañas button{display:flex;align-items:center;gap:8px;height:36px;line-height:1;padding:0 16px;border-radius:999px;font-size:10.5px;font-weight:400;letter-spacing:.2em;text-transform:uppercase;color:var(--tenue);white-space:nowrap;transition:background .35s,color .35s}
 .pestañas button i{font-style:normal;font-size:9px;letter-spacing:.1em;opacity:.7}
 .pestañas button:hover{color:var(--papel)}
 .pestañas button[aria-current="true"]{background:var(--papel);color:#17130d}
@@ -111,9 +111,10 @@ body[data-modo="tour"] .tour{opacity:1;visibility:visible;transition:opacity .6s
 .ir::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--luz);box-shadow:0 0 0 5px rgba(230,184,115,.22)}
 .ir:hover{background:var(--papel);border-color:var(--papel);color:#17130d}
 .ir.oculto{opacity:0;pointer-events:none}
-.tarjeta{position:absolute;z-index:6;left:clamp(18px,3vw,40px);top:96px;width:300px;border-radius:18px;padding:18px 18px 14px;background:rgba(13,12,10,.74)}
+.tarjeta{position:absolute;z-index:6;left:clamp(18px,3vw,40px);top:96px;width:300px;border-radius:18px;padding:18px 18px 14px;background:rgba(13,12,10,.74);max-height:calc(100vh - 120px);max-height:calc(100dvh - 120px);overflow-y:auto;scrollbar-width:none}
+.tarjeta::-webkit-scrollbar{display:none}
 .tarjeta .cab{display:flex;align-items:center;justify-content:space-between}
-.plano{position:relative;width:100%;margin-top:12px}
+.plano{position:relative;width:100%;max-width:calc((100vh - 420px) * .667);max-width:calc((100dvh - 420px) * .667);margin:12px auto 0}
 .plano img{display:block;width:100%;opacity:.9;user-select:none;-webkit-user-drag:none}
 .plano svg{position:absolute;inset:0;width:100%;height:100%}
 .zona{fill:rgba(230,184,115,0);stroke:rgba(230,184,115,0);stroke-width:2;cursor:pointer;transition:fill .3s,stroke .3s}
@@ -131,12 +132,12 @@ body.ver-zonas .tarjeta{width:560px}
 .cuartos button:hover{color:var(--papel)}
 .cuartos button[aria-current="true"]{color:var(--papel)}
 .cuartos button[aria-current="true"] .n{color:var(--luz);opacity:1}
-.pie{position:absolute;z-index:6;left:clamp(18px,3vw,40px);right:clamp(18px,3vw,40px);bottom:calc(env(safe-area-inset-bottom,0px) + 30px);display:flex;align-items:flex-end;justify-content:space-between;gap:20px;pointer-events:none}
+.pie{position:absolute;z-index:6;left:calc(clamp(18px,3vw,40px) + 332px);right:clamp(18px,3vw,40px);bottom:calc(env(safe-area-inset-bottom,0px) + 30px);display:flex;align-items:flex-end;justify-content:space-between;gap:20px;pointer-events:none}
 .pie > *{pointer-events:auto}
 .pie .titulo{font-size:clamp(34px,5.6vh,56px);text-shadow:0 2px 30px rgba(0,0,0,.45)}
 .pie .sub{text-shadow:0 1px 14px rgba(0,0,0,.6)}
 .acciones{display:flex;gap:8px;align-items:center}
-.pista{position:absolute;z-index:6;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 36px);transform:translateX(-50%);height:38px;padding:0 16px;border-radius:999px;display:flex;align-items:center;gap:9px;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;white-space:nowrap;pointer-events:none;transition:opacity .6s}
+.pista{position:absolute;z-index:6;left:50%;top:calc(env(safe-area-inset-top,0px) + 86px);transform:translateX(-50%);height:38px;padding:0 16px;border-radius:999px;display:flex;align-items:center;gap:9px;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;white-space:nowrap;pointer-events:none;transition:opacity .6s}
 .pista.fuera{opacity:0}
 .chips{display:none}
 .abrir-plano{display:none}
@@ -150,7 +151,7 @@ body[data-tour="maqueta"] .maqueta{opacity:1;visibility:visible;transition:opaci
 .maqueta .ir{transform:translate(-50%,-50%);animation:sube .7s cubic-bezier(.2,.7,.2,1) both}
 .maqueta::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,rgba(13,12,10,0) 55%,rgba(13,12,10,.55) 100%)}
 body[data-tour="maqueta"] .tarjeta,body[data-tour="maqueta"] .pista,body[data-tour="maqueta"] .puntos,body[data-tour="maqueta"] .chips,body[data-tour="maqueta"] .acciones{display:none}
-body[data-tour="maqueta"] .pie{z-index:7}
+body[data-tour="maqueta"] .pie{z-index:7;left:clamp(18px,3vw,40px)}
 
 /* ── Video dentro del recorrido ── */
 .cine{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:rgba(8,7,6,.86);-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);opacity:0;visibility:hidden;transition:opacity .4s ease,visibility 0s .4s}
@@ -193,6 +194,7 @@ body.cine-abierto .cine{opacity:1;visibility:visible;transition:opacity .4s ease
   .tira button[aria-current="true"]{opacity:1;box-shadow:inset 0 0 0 1.5px var(--luz)}
   .tarjeta{left:0;right:0;top:0;bottom:0;width:auto;border-radius:0;border:0;z-index:40;padding:calc(env(safe-area-inset-top,0px) + 22px) 22px 22px;display:flex;flex-direction:column;justify-content:center;background:rgba(13,12,10,.93);opacity:0;visibility:hidden;transform:translateY(16px);transition:opacity .4s,transform .4s,visibility 0s .4s}
   body.plano-abierto .tarjeta{opacity:1;visibility:visible;transform:none;transition:opacity .4s,transform .4s}
+  .tarjeta{max-height:none}
   .tarjeta .plano{max-width:min(100%,calc((100dvh - 330px) * .667));align-self:center}
   .tarjeta .cerrar-plano{display:grid!important}
   .pie{left:20px;right:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 72px);flex-direction:column;align-items:flex-start;gap:14px}
@@ -379,7 +381,7 @@ const MAQUETA = {
   baja: { 'hall':[47.23,55.18], 'sala':[28.67,38.97], 'comedor':[52.12,42.95], 'cocina':[65.93,32.28], 'terraza':[41.07,24.99], 'dormitorio-1':[44.47,68.4] },
   alta: { 'puente':[40.29,50.61], 'dormitorio-master':[44.7,36.39], 'bano-master':[65.97,33.42], 'vestidor-master':[71.48,42.21], 'sala-tv':[75.25,54.84], 'dormitorio-2':[45.21,68.78], 'dormitorio-3':[71.78,62.93] },
 };
-const VERSION = '3';   // se cambia al actualizar las imágenes 360 para que el navegador no use las viejas
+const VERSION = '4';   // se cambia al actualizar las imágenes 360 para que el navegador no use las viejas
 
 /* ═════════ Utilidades ═════════ */
 const $ = s => document.querySelector(s);
