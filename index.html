@@ -352,7 +352,7 @@ body.cine-abierto .cine{opacity:1;visibility:visible;transition:opacity .4s ease
   </div>
 </div>
 
-<script src="media/maqueta/puntos.js?v=1"></script>
+<script src="media/maqueta/puntos.js?v=2"></script>
 <script>
 /* ═════════ Contenido: lo único que hay que tocar para cambiar textos, vistas o enlaces ═════════ */
 // Recorrido en video. «variantes» = la misma vista al atardecer y de noche; «una» = se reproduce una sola vez.
@@ -403,7 +403,7 @@ const MAQUETA = {
   baja: { 'hall':[47.23,55.18], 'sala':[28.67,38.97], 'comedor':[52.12,42.95], 'cocina':[65.93,32.28], 'terraza':[41.07,24.99], 'dormitorio-1':[44.47,68.4] },
   alta: { 'puente':[40.29,50.61], 'dormitorio-master':[44.7,36.39], 'bano-master':[65.97,33.42], 'vestidor-master':[71.48,42.21], 'sala-tv':[75.25,54.84], 'dormitorio-2':[45.21,68.78], 'dormitorio-3':[71.78,62.93] },
 };
-const VERSION = '7';   // se cambia al actualizar las imágenes 360 para que el navegador no use las viejas
+const VERSION = '8';   // se cambia al actualizar las imágenes 360 para que el navegador no use las viejas
 
 /* ═════════ Utilidades ═════════ */
 const $ = s => document.querySelector(s);
@@ -663,11 +663,12 @@ function irVista(id, sinHash) {
 }
 /* Maqueta giratoria: una serie de imágenes alrededor de la casa; los nombres siguen a cada cuarto en cada cuadro. */
 const GIRO = window.MAQUETA_GIRO || null;
+const gira = nombre => !!(GIRO && GIRO[nombre]);          // cada planta gira en cuanto tiene sus cuadros
 const lienzoM = $('#maquetaLienzo'), ctxM = lienzoM.getContext('2d');
 const serie = { baja:[], alta:[] };
 let cuadro = 0, autoGiro = 0, etiquetas = [];
 function cargarSerie(nombre) {
-  if (!GIRO || serie[nombre].length) return;
+  if (!gira(nombre) || serie[nombre].length) return;
   for (let k = 0; k < GIRO.n; k++) {
     const im = new Image();
     im.onload = () => { if (nombre === planta && k === cuadro) pintarCuadro(); };
@@ -676,6 +677,7 @@ function cargarSerie(nombre) {
   }
 }
 function pintarCuadro() {
+  if (!gira(planta)) return;
   const im = serie[planta][cuadro];
   if (im && im.complete && im.naturalWidth) {
     if (lienzoM.width !== im.naturalWidth) { lienzoM.width = im.naturalWidth; lienzoM.height = im.naturalHeight; }
@@ -684,13 +686,13 @@ function pintarCuadro() {
   const pos = GIRO[planta][cuadro];
   for (const e of etiquetas) { const [x, y] = pos[e.id]; e.b.style.left = x + '%'; e.b.style.top = y + '%'; }
 }
-function ponerCuadro(k) { cuadro = ((Math.round(k) % GIRO.n) + GIRO.n) % GIRO.n; pintarCuadro(); }
+function ponerCuadro(k) { if (!gira(planta)) return; cuadro = ((Math.round(k) % GIRO.n) + GIRO.n) % GIRO.n; pintarCuadro(); }
 function detenerAutoGiro() { clearInterval(autoGiro); autoGiro = 0; }
 (function arrastreMaqueta() {
   const caja = $('#maquetaCaja');
   let x0 = 0, k0 = 0, activo = false, vel = 0, ultimoX = 0, anim = 0;
   caja.addEventListener('pointerdown', e => {
-    if (!GIRO || e.target.closest('.ir')) return;
+    if (!gira(planta) || e.target.closest('.ir')) return;
     activo = true; x0 = ultimoX = e.clientX; k0 = cuadro; vel = 0; cancelAnimationFrame(anim); detenerAutoGiro();
     caja.classList.add('girando'); caja.setPointerCapture(e.pointerId); $('#pistaGiro').classList.add('fuera');
   });
@@ -714,14 +716,15 @@ function verMaqueta(nombre) {          // entrada a una planta: la maqueta con u
   document.body.dataset.tour = 'maqueta';
   document.body.classList.remove('plano-abierto');
   caja.classList.remove('acercando');
-  $('#maqueta').classList.toggle('gira', !!GIRO);
-  if (!GIRO) { $('#maquetaImg').src = `media/maqueta-${nombre}.jpg?v=${VERSION}`; $('#maquetaImg').alt = 'Maqueta de la ' + p.nombre.toLowerCase(); }
+  const conGiro = gira(nombre);
+  $('#maqueta').classList.toggle('gira', conGiro);
+  if (!conGiro) { $('#maquetaImg').src = `media/maqueta-${nombre}.jpg?v=${VERSION}`; $('#maquetaImg').alt = 'Maqueta de la ' + p.nombre.toLowerCase(); }
   caja.querySelectorAll('.ir').forEach(b => b.remove());
   etiquetas = [];
   deLaPlanta(nombre).forEach((v, k) => {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'ir esmerilado'; b.textContent = v.titulo;
-    if (!GIRO) { const [x, y] = MAQUETA[nombre][v.id]; b.style.left = x + '%'; b.style.top = y + '%'; }
+    if (!conGiro) { const [x, y] = MAQUETA[nombre][v.id]; b.style.left = x + '%'; b.style.top = y + '%'; }
     b.style.animationDelay = (0.25 + k * 0.06) + 's';
     b.addEventListener('pointerenter', () => { new Image().src = `media/360/${v.id}.jpg?v=${VERSION}`; });
     b.onclick = () => {
@@ -732,8 +735,8 @@ function verMaqueta(nombre) {          // entrada a una planta: la maqueta con u
     caja.appendChild(b);
     etiquetas.push({ id: v.id, b });
   });
-  if (GIRO) {
-    cargarSerie(nombre); pintarCuadro();
+  if (conGiro) {
+    cuadro = 0; cargarSerie(nombre); pintarCuadro();
     detenerAutoGiro();
     if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {       // gira sola, despacio, hasta que alguien la toca
       autoGiro = setInterval(() => { if (modo === 'tour' && document.body.dataset.tour === 'maqueta') ponerCuadro(cuadro + 1); }, 170);
@@ -820,7 +823,7 @@ $('#cuentaAlta').textContent = deLaPlanta('alta').length + ' espacios';
 const inicial = location.hash.slice(1);      // se lee antes de arrancar: el exterior escribe su propio enlace
 irExterior(0);
 if (inicial && (vista(inicial) || PLANTAS[inicial] || EXTERIOR.some(v => v.id === inicial))) ir(inicial); else ponerModo('exterior');
-window.estado = () => ({ modo, tour: document.body.dataset.tour, cuadro, gira: !!GIRO, planta, vista: actual360 && actual360.id, exterior: EXTERIOR[ext].id, giro: +(giro * 180 / Math.PI).toFixed(1), textura: !!textura, enlaces: enlaces.length });
+window.estado = () => ({ modo, tour: document.body.dataset.tour, cuadro, gira: gira(planta), planta, vista: actual360 && actual360.id, exterior: EXTERIOR[ext].id, giro: +(giro * 180 / Math.PI).toFixed(1), textura: !!textura, enlaces: enlaces.length });
 </script>
 </body>
 </html>
