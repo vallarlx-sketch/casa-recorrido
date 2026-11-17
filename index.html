@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Recorrido interactivo · DapSam Arquitectos</title>
+<meta name="theme-color" content="#0d0c0a">
+<meta name="robots" content="noindex">
+<meta name="description" content="Recorre la casa espacio por espacio: fachada, hall, sala, piscina y jardín, de la tarde a la noche.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Recorrido interactivo · DapSam Arquitectos">
+<meta property="og:description" content="Recorre la casa espacio por espacio, de la tarde a la noche.">
+<meta property="og:url" content="https://vallarlx-sketch.github.io/casa-recorrido/">
+<meta property="og:image" content="https://vallarlx-sketch.github.io/casa-recorrido/media/compartir.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --tinta:#0d0c0a;
+  --papel:#f3eee6;
+  --tenue:rgba(243,238,230,.6);
+  --linea:rgba(243,238,230,.16);
+  --luz:#e6b873;
+  --serif:"Cormorant Garamond","Didot","Bodoni 72",Georgia,serif;
+  --sans:"Jost","Avenir Next","Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--tinta);color:var(--papel);font-family:var(--sans);font-weight:300;overflow:hidden;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+button:focus-visible{outline:2px solid var(--luz);outline-offset:3px}
+svg{display:block}
+
+/* Fondo: la vista actual, desenfocada */
+.fondo{position:fixed;inset:-80px;z-index:0;pointer-events:none}
+.fondo i{position:absolute;inset:0;background-size:cover;background-position:center;filter:blur(70px) saturate(1.25) brightness(.34);opacity:0;transition:opacity 1.1s ease}
+.fondo i.visible{opacity:1}
+.fondo::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(13,12,10,0) 30%,rgba(13,12,10,.72) 100%)}
+
+.app{position:relative;height:100vh;height:100dvh;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}
+
+.marca{font-size:12px;font-weight:500;letter-spacing:.34em;text-transform:uppercase;white-space:nowrap}
+.marca span{font-weight:300;color:var(--tenue)}
+.eyebrow{font-size:11px;font-weight:400;letter-spacing:.3em;text-transform:uppercase;color:var(--tenue)}
+
+/* Panel izquierdo: marca y lista de vistas */
+.panel{display:flex;flex-direction:column;min-width:0;padding:44px clamp(22px,3.4vw,60px)}
+.panel-izq{justify-self:end;width:min(100%,360px)}
+.panel-izq .eyebrow{margin-top:10px}
+.lista{flex:1;display:flex;flex-direction:column;justify-content:center;margin:18px 0}
+.lista button{position:relative;display:flex;align-items:baseline;gap:16px;width:100%;text-align:left;padding:clamp(5px,1.05vh,11px) 0;color:var(--tenue);transition:color .35s ease,transform .45s cubic-bezier(.2,.7,.2,1)}
+.lista .n{font-size:11px;font-weight:400;letter-spacing:.12em;width:20px;flex:none;font-variant-numeric:tabular-nums;opacity:.75}
+.lista .t{font-family:var(--serif);font-weight:400;font-size:clamp(18px,2.75vh,26px);line-height:1.15}
+.lista button::before{content:"";position:absolute;left:-34px;top:50%;width:22px;height:1px;background:var(--luz);transform:scaleX(0);transform-origin:left;transition:transform .45s cubic-bezier(.2,.7,.2,1)}
+.lista button:hover{color:var(--papel)}
+.lista button[aria-current="true"]{color:var(--papel);transform:translateX(10px)}
+.lista button[aria-current="true"] .n{color:var(--luz);opacity:1}
+.lista button[aria-current="true"]::before{transform:scaleX(1)}
+
+.auto{display:inline-flex;align-items:center;gap:12px;align-self:flex-start;padding:13px 20px 13px 16px;border:1px solid var(--linea);border-radius:999px;font-size:11px;font-weight:400;letter-spacing:.22em;text-transform:uppercase;transition:border-color .3s,background .3s,color .3s}
+.auto:hover{border-color:var(--luz)}
+.auto.activo{background:var(--luz);border-color:var(--luz);color:#1a140b}
+.auto .pausa{display:none}
+.auto.activo .pausa{display:block}
+.auto.activo .play{display:none}
+.atajo{margin-top:16px;font-size:11px;letter-spacing:.08em;color:rgba(243,238,230,.38)}
+
+/* Escena: el video */
+.escena{position:relative;align-self:center;height:calc(100vh - 44px);height:calc(100dvh - 44px);aspect-ratio:9/16;border-radius:16px;overflow:hidden;background:#000;box-shadow:0 50px 140px rgba(0,0,0,.65),0 0 0 1px rgba(243,238,230,.07);touch-action:pan-y}
+.escena video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 650ms ease}
+.escena video.visible{opacity:1}
+.velo{position:absolute;inset:0;z-index:3;pointer-events:none;background:linear-gradient(180deg,rgba(8,7,6,.5) 0%,rgba(8,7,6,0) 17%,rgba(8,7,6,0) 52%,rgba(8,7,6,.82) 100%)}
+
+.cabecera{position:absolute;z-index:5;top:0;left:0;right:0;display:none;align-items:center;justify-content:space-between;gap:12px;padding:calc(env(safe-area-inset-top,0px) + 18px) 18px 0}
+.cabecera .marca{font-size:10.5px;letter-spacing:.28em;line-height:1.5}
+.cabecera .marca span{display:block}
+.cabecera .acciones{display:flex;gap:8px}
+.pastilla{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 13px;border-radius:999px;background:rgba(13,12,10,.42);border:1px solid var(--linea);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);font-size:10.5px;font-weight:400;letter-spacing:.18em;text-transform:uppercase}
+.pastilla.activo{background:var(--luz);border-color:var(--luz);color:#1a140b}
+.pastilla .pausa{display:none}
+.pastilla.activo .pausa{display:block}
+.pastilla.activo .play{display:none}
+
+.rotulo{position:absolute;z-index:5;left:30px;right:120px;bottom:38px}
+.rotulo .sub{font-size:11px;font-weight:400;letter-spacing:.28em;text-transform:uppercase;color:var(--luz)}
+.rotulo h1{font-family:var(--serif);font-weight:400;font-size:clamp(34px,5.4vh,52px);line-height:1.02;letter-spacing:-.005em;margin-top:8px;text-wrap:balance}
+.rotulo .cambia{animation:sube .7s cubic-bezier(.2,.7,.2,1) both}
+.rotulo h1.cambia{animation-delay:.06s}
+@keyframes sube{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+.fila{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.momento{display:inline-flex;padding:3px;border-radius:999px;background:rgba(13,12,10,.45);border:1px solid var(--linea);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.momento button{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 14px;border-radius:999px;font-size:10.5px;font-weight:400;letter-spacing:.16em;text-transform:uppercase;color:var(--tenue);transition:background .35s,color .35s}
+.momento button[aria-pressed="true"]{background:var(--papel);color:#17130d}
+.repetir{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 16px;border-radius:999px;background:rgba(13,12,10,.45);border:1px solid var(--linea);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);font-size:10.5px;font-weight:400;letter-spacing:.16em;text-transform:uppercase;animation:sube .6s ease both}
+.repetir.principal{background:var(--papel);border-color:var(--papel);color:#17130d}
+.repetir.icono{width:40px;padding:0;justify-content:center}
+
+.flechas{position:absolute;z-index:5;right:24px;bottom:38px;display:flex;gap:8px}
+.flechas button{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:rgba(13,12,10,.42);border:1px solid var(--linea);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);transition:background .3s,border-color .3s,color .3s}
+.flechas button:hover{background:var(--papel);border-color:var(--papel);color:#17130d}
+
+.progreso{position:absolute;z-index:5;left:0;right:0;bottom:0;height:2px;background:rgba(243,238,230,.14)}
+.progreso i{display:block;height:100%;width:100%;background:var(--luz);transform-origin:left;transform:scaleX(0)}
+
+.tira{display:none}
+
+/* Panel derecho: plano */
+.panel-der{justify-self:start;width:min(100%,480px);justify-content:center;gap:20px}
+.panel-der .titulo-plano{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.cerrar{display:none}
+.plano{position:relative;width:100%;max-width:calc((100vh - 230px) * 820 / 1229);aspect-ratio:820/1229;align-self:center}
+.plano img{position:absolute;inset:0;width:100%;height:100%;opacity:.92;user-select:none;-webkit-user-drag:none}
+.punto{position:absolute;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;display:grid;place-items:center}
+.punto::before{content:"";width:11px;height:11px;border-radius:50%;background:var(--papel);box-shadow:0 0 0 4px rgba(13,12,10,.55);transition:transform .35s cubic-bezier(.2,.7,.2,1),background .35s}
+.punto::after{content:"";position:absolute;inset:6px;border-radius:50%;border:1px solid var(--luz);opacity:0}
+.punto:hover::before{transform:scale(1.3)}
+.punto[aria-current="true"]::before{background:var(--luz);transform:scale(1.35)}
+.punto[aria-current="true"]::after{animation:onda 2.2s ease-out infinite}
+@keyframes onda{0%{opacity:.9;transform:scale(.6)}100%{opacity:0;transform:scale(1.9)}}
+.punto b{position:absolute;left:50%;bottom:calc(100% - 2px);transform:translate(-50%,4px);white-space:nowrap;padding:5px 10px;border-radius:6px;background:var(--papel);color:#17130d;font-size:10px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s}
+.punto:hover b,.punto[aria-current="true"] b{opacity:1;transform:translate(-50%,0)}
+.punto:hover{z-index:3}
+.punto[aria-current="true"]{z-index:2}
+.nota{font-size:12.5px;line-height:1.55;color:var(--tenue);max-width:32ch}
+
+/* Teléfono y pantallas verticales */
+@media (max-width:900px),(max-aspect-ratio:1/1){
+  .app{display:block}
+  .panel-izq,.flechas{display:none}
+  .escena{position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:auto;height:100%;max-width:100%;align-self:stretch;justify-self:stretch;aspect-ratio:9/16;border-radius:0;box-shadow:0 0 120px rgba(0,0,0,.6)}
+  .cabecera{display:flex}
+  .velo{background:linear-gradient(180deg,rgba(8,7,6,.55) 0%,rgba(8,7,6,0) 16%,rgba(8,7,6,0) 44%,rgba(8,7,6,.9) 100%)}
+  .rotulo{left:20px;right:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 148px)}
+  .rotulo h1{font-size:clamp(34px,10vw,46px)}
+  .fila{margin-top:14px}
+  .progreso{bottom:calc(env(safe-area-inset-bottom,0px) + 128px);left:20px;right:20px;height:1px}
+  .tira{position:absolute;z-index:5;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);display:flex;gap:8px;padding:0 20px;overflow-x:auto;scrollbar-width:none;scroll-snap-type:x proximity;scroll-padding:0 20px}
+  .tira::-webkit-scrollbar{display:none}
+  .tira button{position:relative;flex:none;width:72px;height:100px;border-radius:9px;overflow:hidden;background-size:cover;background-position:center;scroll-snap-align:start;box-shadow:inset 0 0 0 1px rgba(243,238,230,.18);opacity:.72;transition:opacity .3s,transform .3s}
+  .tira button::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,7,6,0) 45%,rgba(8,7,6,.85) 100%)}
+  .tira button span{position:absolute;left:0;right:0;bottom:7px;text-align:center;font-size:10px;font-weight:400;letter-spacing:.08em;text-transform:uppercase}
+  .tira button[aria-current="true"]{opacity:1;box-shadow:inset 0 0 0 1.5px var(--luz)}
+  .panel-der{position:fixed;inset:0;z-index:20;width:100%;height:100%;align-self:stretch;justify-self:stretch;padding:calc(env(safe-area-inset-top,0px) + 22px) 22px calc(env(safe-area-inset-bottom,0px) + 22px);background:rgba(13,12,10,.9);-webkit-backdrop-filter:blur(26px);backdrop-filter:blur(26px);opacity:0;visibility:hidden;transform:translateY(18px);transition:opacity .4s ease,transform .4s ease,visibility 0s .4s}
+  body.plano-abierto .panel-der{opacity:1;visibility:visible;transform:none;transition:opacity .4s ease,transform .4s ease}
+  .plano{max-width:min(100%,calc((100vh - 190px) * 820 / 1229))}
+  .cerrar{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;border:1px solid var(--linea)}
+  .nota{align-self:center;text-align:center}
+}
+@media (prefers-reduced-motion:reduce){
+  .punto[aria-current="true"]::after,.rotulo .cambia,.repetir{animation:none}
+}
+</style>
+</head>
+<body>
+
+<div class="fondo" aria-hidden="true"><i></i><i></i></div>
+
+<main class="app">
+
+  <aside class="panel panel-izq">
+    <p class="marca">DapSam <span>Arquitectos</span></p>
+    <p class="eyebrow">Recorrido interactivo</p>
+    <nav class="lista" id="lista" aria-label="Vistas de la casa"></nav>
+    <button class="auto" id="auto" type="button">
+      <svg class="play" width="11" height="12" viewBox="0 0 11 12" aria-hidden="true"><path d="M1 1l9 5-9 5z" fill="currentColor"/></svg>
+      <svg class="pausa" width="11" height="12" viewBox="0 0 11 12" aria-hidden="true"><path d="M1.5 1h3v10h-3zM6.5 1h3v10h-3z" fill="currentColor"/></svg>
+      <span class="texto">Recorrido automático</span>
+    </button>
+    <p class="atajo">← → cambian de vista</p>
+  </aside>
+
+  <section class="escena" id="escena" aria-label="Video de la vista">
+    <video id="va" muted playsinline preload="auto"></video>
+    <video id="vb" muted playsinline preload="auto"></video>
+    <div class="velo"></div>
+
+    <div class="cabecera">
+      <p class="marca">DapSam <span>Arquitectos</span></p>
+      <div class="acciones">
+        <button class="pastilla" id="autoMovil" type="button" aria-label="Recorrido automático">
+          <svg class="play" width="10" height="11" viewBox="0 0 11 12" aria-hidden="true"><path d="M1 1l9 5-9 5z" fill="currentColor"/></svg>
+          <svg class="pausa" width="10" height="11" viewBox="0 0 11 12" aria-hidden="true"><path d="M1.5 1h3v10h-3zM6.5 1h3v10h-3z" fill="currentColor"/></svg>
+          Auto
+        </button>
+        <button class="pastilla" id="abrirPlano" type="button">
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><path d="M1 1h12v12H1zM1 6h6M7 1v8M7 9h6"/></svg>
+          Plano
+        </button>
+      </div>
+    </div>
+
+    <div class="rotulo">
+      <p class="sub" id="sub"></p>
+      <h1 id="titulo"></h1>
+      <div class="fila">
+        <div class="momento" id="momento" role="group" aria-label="Hora del día" hidden>
+          <button type="button" data-m="tarde" aria-pressed="true">
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="2.6"/><path d="M7 .8v1.6M7 11.6v1.6M.8 7h1.6M11.6 7h1.6M2.6 2.6l1.1 1.1M10.3 10.3l1.1 1.1M2.6 11.4l1.1-1.1M10.3 3.7l1.1-1.1"/></svg>
+            Atardecer
+          </button>
+          <button type="button" data-m="noche" aria-pressed="false">
+            <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" aria-hidden="true"><path d="M12.2 8.6A5.6 5.6 0 0 1 5.4 1.8a5.6 5.6 0 1 0 6.8 6.8z"/></svg>
+            Noche
+          </button>
+        </div>
+        <button class="repetir icono" id="repetir" type="button" aria-label="Ver de nuevo" title="Ver de nuevo" hidden>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 7a5 5 0 1 0 1.6-3.7M2 1.6v2.2h2.2"/></svg>
+        </button>
+        <button class="repetir principal" id="seguir" type="button" hidden>
+          Entrar a la casa
+          <svg width="13" height="11" viewBox="0 0 14 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 6h12M8.5 1.5L13 6l-4.5 4.5"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="flechas">
+      <button type="button" id="anterior" aria-label="Vista anterior">
+        <svg width="14" height="12" viewBox="0 0 14 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 6H1M5.5 1.5L1 6l4.5 4.5"/></svg>
+      </button>
+      <button type="button" id="siguiente" aria-label="Vista siguiente">
+        <svg width="14" height="12" viewBox="0 0 14 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 6h12M8.5 1.5L13 6l-4.5 4.5"/></svg>
+      </button>
+    </div>
+
+    <div class="progreso" aria-hidden="true"><i id="barra"></i></div>
+    <nav class="tira" id="tira" aria-label="Vistas de la casa"></nav>
+  </section>
+
+  <aside class="panel panel-der" id="panelPlano">
+    <div class="titulo-plano">
+      <p class="eyebrow">Planta baja</p>
+      <button class="cerrar" id="cerrarPlano" type="button" aria-label="Cerrar el plano">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" aria-hidden="true"><path d="M1 1l10 10M11 1L1 11"/></svg>
+      </button>
+    </div>
+    <div class="plano" id="plano">
+      <img src="media/plano-planta-baja.png" alt="Plano de la planta baja" draggable="false">
+    </div>
+    <p class="nota">Elige un punto del plano para ir a ese espacio.</p>
+  </aside>
+
+</main>
+
+<script>
+/* ───────── Contenido: lo único que hay que tocar para cambiar textos o vistas ─────────
+   archivo  → nombre del video en la carpeta media (sin .mp4)
+   variantes→ misma vista al atardecer y de noche
+   una      → se reproduce una sola vez y se queda en el último cuadro
+   punto    → posición en el plano, en porcentaje [x, y] */
+const VISTAS = [
+  { id:'casa-se-arma', corto:'Inicio',   titulo:'La casa se arma',     sub:'Del lote vacío a la casa terminada', archivo:'casa-se-arma', una:true },
+  { id:'fachada',      corto:'Fachada',  titulo:'Fachada',             sub:'Frente de la casa',                  variantes:{ tarde:'fachada-dia', noche:'fachada-noche' }, punto:[40,93.5] },
+  { id:'entrada',      corto:'Entrada',  titulo:'Entrada',             sub:'Acceso principal',                   archivo:'entrada',       punto:[42,77.5] },
+  { id:'hall',         corto:'Hall',     titulo:'Hall',                sub:'Doble altura',                       archivo:'hall',          punto:[40,62] },
+  { id:'escalera',     corto:'Escalera', titulo:'Escalera y lámparas', sub:'Mármol y baranda de vidrio',         archivo:'escalera',      punto:[53.5,55] },
+  { id:'sala',         corto:'Sala',     titulo:'Sala principal',      sub:'Doble altura, frente a la piscina',  archivo:'sala',          punto:[29,36] },
+  { id:'detalles',     corto:'Detalles', titulo:'Detalles de la sala', sub:'Mural, lámparas y comedor',          archivo:'sala-detalles', punto:[48,36] },
+  { id:'piscina',      corto:'Piscina',  titulo:'Piscina',             sub:'5,30 m de largo',                    archivo:'piscina',       punto:[41,16] },
+  { id:'terraza',      corto:'Terraza',  titulo:'Terraza',             sub:'Comedor exterior y BBQ',             archivo:'terraza',       punto:[69.5,17.5] },
+  { id:'jardin',       corto:'Jardín',   titulo:'Jardín',              sub:'Fachada posterior',                  variantes:{ tarde:'jardin-dia', noche:'jardin-noche' }, punto:[27,23.5] },
+];
+/* Orden del recorrido automático: de la tarde a la noche */
+const RUTA = [['casa-se-arma'],['fachada','tarde'],['entrada'],['hall'],['escalera'],['sala'],['detalles'],['piscina'],['terraza'],['jardin','tarde'],['jardin','noche'],['fachada','noche']];
+
+const $ = s => document.querySelector(s);
+const capas = [$('#va'), $('#vb')];
+const fondos = document.querySelectorAll('.fondo i');
+let frente = 0, fondoFrente = 0, pedido = 0, limpiar = 0;
+let actual = -1, momento = 'tarde', auto = false;
+
+const archivoDe = v => v.variantes ? v.variantes[momento] : v.archivo;
+const indiceDe = id => VISTAS.findIndex(v => v.id === id);
+
+/* ───────── Construir menú, tira y puntos del plano ───────── */
+VISTAS.forEach((v, i) => {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.innerHTML = `<span class="n">${String(i + 1).padStart(2, '0')}</span><span class="t">${v.titulo}</span>`;
+  b.addEventListener('click', () => ir(i, { manual:true }));
+  b.addEventListener('pointerenter', () => precargar(archivoDe(v)));
+  $('#lista').appendChild(b);
+
+  const t = document.createElement('button');
+  t.type = 'button';
+  t.setAttribute('aria-label', v.titulo);
+  t.innerHTML = `<span>${v.corto}</span>`;
+  t.addEventListener('click', () => ir(i, { manual:true }));
+  $('#tira').appendChild(t);
+
+  if (v.punto) {
+    const p = document.createElement('button');
+    p.type = 'button';
+    p.className = 'punto';
+    p.dataset.i = i;
+    p.style.left = v.punto[0] + '%';
+    p.style.top = v.punto[1] + '%';
+    p.setAttribute('aria-label', v.titulo);
+    p.innerHTML = `<b>${v.corto}</b>`;
+    p.addEventListener('click', () => { ir(i, { manual:true }); document.body.classList.remove('plano-abierto'); });
+    p.addEventListener('pointerenter', () => precargar(archivoDe(v)));
+    $('#plano').appendChild(p);
+  }
+});
+const botonesLista = [...$('#lista').children];
+const botonesTira = [...$('#tira').children];
+const puntos = [...document.querySelectorAll('.punto')];
+
+function pintarMinis() {
+  VISTAS.forEach((v, i) => { botonesTira[i].style.backgroundImage = `url("media/${archivoDe(v)}-mini.jpg")`; });
+}
+
+/* ───────── Video: dos capas que se funden ───────── */
+const precargados = {};
+function precargar(archivo) {
+  if (precargados[archivo]) return;
+  const v = document.createElement('video');
+  v.muted = true; v.preload = 'auto'; v.src = `media/${archivo}.mp4`;
+  precargados[archivo] = v;
+}
+
+function repetirEnBucle() { return !auto && !VISTAS[actual].una; }
+
+function mostrar(archivo, ms) {
+  const mio = ++pedido;
+  const poster = `media/${archivo}.jpg`;
+
+  if (actual >= 0 && !capas[frente].currentSrc && !capas[1 - frente].currentSrc) {
+    // primera carga: sin fundido
+    const v = capas[frente];
+    v.poster = poster; v.src = `media/${archivo}.mp4`; v.loop = repetirEnBucle();
+    v.classList.add('visible');
+    v.play().catch(() => {});
+  } else {
+    const entra = capas[1 - frente], sale = capas[frente];
+    entra.style.transitionDuration = '0ms';
+    entra.classList.remove('visible');
+    void entra.offsetWidth;
+    entra.poster = poster;
+    entra.src = `media/${archivo}.mp4`;
+    entra.loop = repetirEnBucle();
+    entra.load();
+    const listo = () => {
+      if (mio !== pedido) return;
+      entra.play().catch(() => {});
+      entra.style.transitionDuration = ms + 'ms';
+      entra.style.zIndex = 2; sale.style.zIndex = 1;
+      entra.classList.add('visible');
+      frente = 1 - frente;
+      clearTimeout(limpiar);
+      limpiar = setTimeout(() => {
+        if (mio !== pedido) return;
+        sale.style.transitionDuration = '0ms';
+        sale.classList.remove('visible');
+        sale.pause();
+      }, ms + 80);
+    };
+    if (entra.readyState >= 2) listo();
+    else entra.addEventListener('loadeddata', listo, { once:true });
+  }
+
+  const f = fondos[1 - fondoFrente];
+  f.style.backgroundImage = `url("${poster}")`;
+  f.classList.add('visible');
+  fondos[fondoFrente].classList.remove('visible');
+  fondoFrente = 1 - fondoFrente;
+}
+
+/* ───────── Cambiar de vista ───────── */
+function ir(i, opciones = {}) {
+  i = (i + VISTAS.length) % VISTAS.length;
+  if (opciones.manual && auto) ponerAuto(false);
+  if (opciones.momento) momento = opciones.momento;
+  const mismaVista = i === actual;
+  if (mismaVista && !opciones.momento && !opciones.forzar) return;
+  actual = i;
+  const v = VISTAS[i];
+
+  if (!mismaVista) {
+    const sub = $('#sub'), tit = $('#titulo');
+    sub.textContent = v.sub; tit.textContent = v.titulo;
+    [sub, tit].forEach(e => { e.classList.remove('cambia'); void e.offsetWidth; e.classList.add('cambia'); });
+  }
+  botonesLista.forEach((b, k) => b.setAttribute('aria-current', k === i));
+  botonesTira.forEach((b, k) => b.setAttribute('aria-current', k === i));
+  // «La casa se arma» ocurre frente a la casa: comparte punto con la fachada
+  const iPunto = v.punto ? i : indiceDe('fachada');
+  puntos.forEach(p => p.setAttribute('aria-current', +p.dataset.i === iPunto));
+  botonesTira[i].scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
+
+  $('#momento').hidden = !v.variantes;
+  document.querySelectorAll('#momento button').forEach(b => b.setAttribute('aria-pressed', b.dataset.m === momento));
+  $('#repetir').hidden = true; $('#seguir').hidden = true;
+  pintarMinis();
+
+  mostrar(archivoDe(v), mismaVista ? 1500 : 650);
+
+  const sig = VISTAS[(i + 1) % VISTAS.length];
+  precargar(archivoDe(sig));
+  if (v.variantes) precargar(v.variantes[momento === 'tarde' ? 'noche' : 'tarde']);
+  try { history.replaceState(null, '', '#' + v.id); } catch (e) {}
+}
+
+/* ───────── Recorrido automático ───────── */
+function ponerAuto(si) {
+  auto = si;
+  $('#auto').classList.toggle('activo', si);
+  $('#autoMovil').classList.toggle('activo', si);
+  $('#auto .texto').textContent = si ? 'Detener recorrido' : 'Recorrido automático';
+  if (actual >= 0) capas[frente].loop = repetirEnBucle();
+}
+function pasoDeRuta() {
+  const id = VISTAS[actual].id;
+  let k = RUTA.findIndex(r => r[0] === id && (!r[1] || r[1] === momento));
+  if (k < 0) k = RUTA.findIndex(r => r[0] === id);
+  return k;
+}
+function avanzarRuta() {
+  const k = pasoDeRuta() + 1;
+  if (k >= RUTA.length) { ponerAuto(false); capas[frente].play().catch(() => {}); return; }
+  const [id, m] = RUTA[k];
+  ir(indiceDe(id), { momento:m, forzar:true });
+}
+function alternarAuto() {
+  if (auto) { ponerAuto(false); return; }
+  ponerAuto(true);
+  $('#repetir').hidden = true; $('#seguir').hidden = true;
+  const v = capas[frente];
+  if (v.ended) avanzarRuta();
+  else if (pasoDeRuta() === RUTA.length - 1) { momento = 'tarde'; ir(0, { forzar:true }); }
+}
+capas.forEach(v => v.addEventListener('ended', () => {
+  if (v !== capas[frente]) return;
+  if (auto) avanzarRuta();
+  else if (VISTAS[actual].una) { $('#repetir').hidden = false; $('#seguir').hidden = false; }
+}));
+
+/* ───────── Controles ───────── */
+$('#auto').addEventListener('click', alternarAuto);
+$('#autoMovil').addEventListener('click', alternarAuto);
+$('#anterior').addEventListener('click', () => ir(actual - 1, { manual:true }));
+$('#siguiente').addEventListener('click', () => ir(actual + 1, { manual:true }));
+$('#repetir').addEventListener('click', () => {
+  $('#repetir').hidden = true; $('#seguir').hidden = true;
+  const v = capas[frente]; v.currentTime = 0; v.play().catch(() => {});
+});
+$('#seguir').addEventListener('click', () => ir(actual + 1, { manual:true }));
+document.querySelectorAll('#momento button').forEach(b => b.addEventListener('click', () => {
+  if (b.dataset.m === momento) return;
+  if (auto) ponerAuto(false);
+  ir(actual, { momento:b.dataset.m });
+}));
+$('#abrirPlano').addEventListener('click', () => document.body.classList.add('plano-abierto'));
+$('#cerrarPlano').addEventListener('click', () => document.body.classList.remove('plano-abierto'));
+
+document.addEventListener('keydown', e => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.key === 'ArrowRight') ir(actual + 1, { manual:true });
+  else if (e.key === 'ArrowLeft') ir(actual - 1, { manual:true });
+  else if (e.key === 'Escape') document.body.classList.remove('plano-abierto');
+  else if (e.key === ' ' && document.activeElement.tagName !== 'BUTTON') { e.preventDefault(); alternarAuto(); }
+});
+
+// deslizar en el teléfono
+let x0 = null, y0 = 0;
+$('#escena').addEventListener('touchstart', e => {
+  if (e.target.closest('.tira, button')) { x0 = null; return; }
+  x0 = e.touches[0].clientX; y0 = e.touches[0].clientY;
+}, { passive:true });
+$('#escena').addEventListener('touchend', e => {
+  if (x0 === null) return;
+  const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
+  x0 = null;
+  if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.4) ir(actual + (dx < 0 ? 1 : -1), { manual:true });
+}, { passive:true });
+
+// barra de avance del video
+(function tic() {
+  const v = capas[frente];
+  const p = v.duration ? Math.min(1, v.currentTime / v.duration) : 0;
+  $('#barra').style.transform = `scaleX(${p})`;
+  requestAnimationFrame(tic);
+})();
+
+// si el teléfono bloquea el arranque automático (modo de ahorro), el primer toque lo inicia
+document.addEventListener('pointerdown', () => {
+  const v = capas[frente];
+  if (actual >= 0 && v.paused && !v.ended) v.play().catch(() => {});
+});
+
+// al volver a la pestaña, el video sigue
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && actual >= 0 && !capas[frente].ended) capas[frente].play().catch(() => {});
+});
+
+/* ───────── Arranque ───────── */
+window.addEventListener('hashchange', () => {
+  const k = indiceDe(location.hash.slice(1));
+  if (k >= 0 && k !== actual) ir(k, { manual:true });
+});
+const inicial = indiceDe(location.hash.slice(1));
+ir(inicial >= 0 ? inicial : 0, { forzar:true });
+</script>
+</body>
+</html>
